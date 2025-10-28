@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { signOut, useSession } from 'next-auth/react';
 import { Menu, X, User, LogOut, Plus, MessageSquare } from 'lucide-react';
 import { LogIn } from 'lucide-react';
@@ -22,6 +21,7 @@ export default function Navbar({ session: serverSession }: NavbarProps) {
   const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchUnreadCount = async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!(currentSession?.user as any)?.id) return;
 
     try {
@@ -40,6 +40,7 @@ export default function Navbar({ session: serverSession }: NavbarProps) {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((currentSession?.user as any)?.id) {
       // Întârzie fetch-ul mesajelor pentru a prioritiza proprietățile
       const timer = setTimeout(() => {
@@ -67,6 +68,7 @@ export default function Navbar({ session: serverSession }: NavbarProps) {
         window.removeEventListener('focus', handleFocus);
       };
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }, [(currentSession?.user as any)?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSignOut = () => {

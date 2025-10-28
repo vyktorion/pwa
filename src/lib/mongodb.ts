@@ -1,16 +1,19 @@
 import { MongoClient } from 'mongodb';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const globalThis: any;
+
 declare global {
   var _mongoClientPromiseMain: Promise<MongoClient> | undefined;
   var _mongoClientPromiseSales: Promise<MongoClient> | undefined;
 }
 
 
-if (!(globalThis as any).process?.env?.MONGODB_URI) {
+if (!globalThis.process?.env?.MONGODB_URI) {
   throw new Error('Please add your MongoDB URI to .env.local');
 }
 
-if (!(globalThis as any).process?.env?.MONGODB_SALE) {
+if (!globalThis.process?.env?.MONGODB_SALE) {
   throw new Error('Please add your MongoDB SALE URI to .env.local');
 }
 
@@ -23,15 +26,15 @@ let clientSales: MongoClient;
 let clientPromiseMain: Promise<MongoClient>;
 let clientPromiseSales: Promise<MongoClient>;
 
-if ((globalThis as any).process?.env?.NODE_ENV === 'development') {
+if (globalThis.process?.env?.NODE_ENV === 'development') {
   // In development mode, use a global variable so that the value
   // is preserved across module reloads caused by HMR (Hot Module Replacement).
   if (!global._mongoClientPromiseMain) {
-  clientMain = new MongoClient((globalThis as any).process.env.MONGODB_URI, options);
+  clientMain = new MongoClient(globalThis.process.env.MONGODB_URI, options);
   global._mongoClientPromiseMain = clientMain.connect();
   }
   if (!global._mongoClientPromiseSales) {
-  clientSales = new MongoClient((globalThis as any).process.env.MONGODB_SALE, options);
+  clientSales = new MongoClient(globalThis.process.env.MONGODB_SALE, options);
   global._mongoClientPromiseSales = clientSales.connect();
   }
 
@@ -39,8 +42,8 @@ if ((globalThis as any).process?.env?.NODE_ENV === 'development') {
   clientPromiseSales = global._mongoClientPromiseSales;
 } else {
   // In production mode, it's best to not use a global variable.
-  clientMain = new MongoClient((globalThis as any).process.env.MONGODB_URI, options);
-  clientSales = new MongoClient((globalThis as any).process.env.MONGODB_SALE, options);
+  clientMain = new MongoClient(globalThis.process.env.MONGODB_URI, options);
+  clientSales = new MongoClient(globalThis.process.env.MONGODB_SALE, options);
 
   clientPromiseMain = clientMain.connect();
   clientPromiseSales = clientSales.connect();

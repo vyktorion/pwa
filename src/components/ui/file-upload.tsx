@@ -20,6 +20,7 @@ interface FileUploadProps {
 export function FileUpload({ value, onChange, disabled, className }: FileUploadProps) {
   const [preview, setPreview] = useState<string | null>(value || null);
   const [localPreview, setLocalPreview] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { startUpload, isUploading } = useUploadThing('avatarUploader', {

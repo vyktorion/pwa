@@ -43,7 +43,7 @@ function Button({
     asChild?: boolean
   }) {
   const Comp = "button"
-  // Elimină asChild din props
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { asChild, ...rest } = props
 
   return (
