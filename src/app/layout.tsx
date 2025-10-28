@@ -19,12 +19,16 @@ export const metadata: Metadata = {
   title: "SlowWebsite",
   description: "SlowWebsite blog and resources",
   manifest: "/manifest.json",
-  themeColor: "#8fff70",
-  viewport: "width=device-width, initial-scale=1",
   icons: {
     icon: "/icon512_rounded.png",
     apple: "/icon512_maskable.png",
   },
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#ffffff',
 };
 
 export default function RootLayout({

@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
 };
 
 const withPWA = nextPwa({
-  dest: "public",
+  dest: "src/public",
   register: true,
 });
 

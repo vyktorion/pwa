@@ -19,9 +19,6 @@ export function Navbar() {
       <Link className="hover:text-primary hover:underline" href="/">
         Home
       </Link>
-      <Link className="hover:text-primary hover:underline" href="/blog">
-        Blog
-      </Link>
       <Link
         className="hover:text-primary hover:underline"
         href="/dashboard"
