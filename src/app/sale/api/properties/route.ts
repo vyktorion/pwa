@@ -128,9 +128,8 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const client = new MongoClient((globalThis as any).process.env.MONGODB_SALE!);
+ // eslint-disable-next-line @typescript-eslint/no-explicit-any
+ const client = new MongoClient((globalThis as any).process.env.MONGODB_SALE!);
     const db = await client.db();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
