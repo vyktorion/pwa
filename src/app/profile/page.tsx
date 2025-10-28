@@ -125,7 +125,6 @@ export default function ProfilePage() {
 
       if (response.ok) {
         toast({
-          variant: "success",
           title: "Succes",
           description: "Profil actualizat cu succes!",
         });
@@ -242,7 +241,6 @@ export default function ProfilePage() {
 
       if (response.ok) {
         toast({
-          variant: "success",
           title: "Succes",
           description: "Parola a fost schimbată cu succes!",
         });
