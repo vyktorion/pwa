@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ui/theme-provider";
-import { Navbar } from "@/components/web/Navbar";
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth/nextauth';
+import ClientLayout from './client-layout';
 import Pwa from "@/components/pwa";
 
 const geistSans = Geist({
@@ -31,13 +33,15 @@ export const viewport = {
   themeColor: '#ffffff',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  
+  const session = await getServerSession(authOptions);
   return (
-      <html lang="en" suppressHydrationWarning>
+      <html lang="ro" suppressHydrationWarning>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
@@ -47,8 +51,10 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <Navbar />
-            {children}
+            <ClientLayout session={session}>
+  {children}
+</ClientLayout>
+
             <Pwa />
           </ThemeProvider>
         </body>
