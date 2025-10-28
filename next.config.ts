@@ -1,7 +1,5 @@
-import nextPwa from "next-pwa";
-
 // @ts-ignore
-
+import nextPwa from "next-pwa";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -9,9 +7,8 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "res.cloudinary.com",
-        port: "",
+        protocol: 'https',
+        hostname: 'utfs.io',
       },
     ],
   },
@@ -22,4 +19,5 @@ const withPWA = nextPwa({
   register: true,
 });
 
+// @ts-ignore
 export default withPWA(nextConfig);
