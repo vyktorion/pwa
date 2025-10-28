@@ -1,5 +1,5 @@
 
-import { BlogCard } from "./_components/BlogCard";
+
 import { Suspense } from "react";
 
 export default function BlogPage() {
