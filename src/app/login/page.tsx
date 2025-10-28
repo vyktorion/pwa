@@ -35,7 +35,6 @@ export default function LoginPage() {
         });
       } else {
         toast({
-          variant: "success",
           title: "Autentificare reușită",
           description: "Bine ai venit!",
         });
