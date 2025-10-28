@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { UserDropdown } from "./UserDropdown";
-import { ThemeToggle } from "../ui/ThemeToggle";
+import { ThemeToggle } from "../ui/theme-toggle";
 import { useIsMobile } from "../../hooks/use-mobile";
 import { Button } from "../ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";

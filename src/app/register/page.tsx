@@ -71,7 +71,6 @@ export default function RegisterPage() {
 
       if (response.ok) {
         toast({
-          variant: "success",
           title: "Cont creat cu succes!",
           description: "Veți fi redirecționat către pagina de autentificare...",
         });
@@ -150,7 +149,7 @@ export default function RegisterPage() {
               <label className="block text-sm font-semibold text-foreground mb-3">
                 Rol
               </label>
-              <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value as typeof formData.role })}>
+              <Select value={formData.role} onValueChange={(value: string) => setFormData({ ...formData, role: value as typeof formData.role })}>
                 <SelectTrigger className="w-full px-5 py-4 border border-input rounded-xl bg-background/50 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300 backdrop-blur-sm">
                   <SelectValue placeholder="Selectează rolul" />
                 </SelectTrigger>
