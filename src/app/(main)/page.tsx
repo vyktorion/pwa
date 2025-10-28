@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import SlowImage from "@/public/E_vbZ10XIAEi752.jpg";
 import Image from "next/image";
 
 export default function Home() {
@@ -27,8 +26,10 @@ export default function Home() {
         {/* Right side - Image */}
         <div className="flex-1">
           <Image
-            src={SlowImage}
+            src="/E_vbZ10XIAEi752.jpg"
             alt="Slow Image"
+            width={500}
+            height={400}
             className="w-full h-auto rounded-lg shadow-lg"
           />
         </div>

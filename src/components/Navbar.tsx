@@ -80,13 +80,6 @@ export default function Navbar({ session: serverSession }: NavbarProps) {
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center">
-              <Image
-                src="/logo.svg"
-                alt="Imob.ro"
-                width={45}
-                height={45}
-                className="mr-2"
-              />
               <span className="text-lg font-bold text-foreground">Imob.ro</span>
             </Link>
           </div>
@@ -102,8 +95,8 @@ export default function Navbar({ session: serverSession }: NavbarProps) {
                 <Link
                   href="/sale/post" >
                   <Button
-                    variant="secondary"
-                    className="h-9 p-2"
+                    // variant="secondary" (mutat pe Button)
+                    className="h-9 p-2 rounded-xl gap-0"
                   >
                     <Plus className="w-5 h-5" />
                     Adauga anunt
