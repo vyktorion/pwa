@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SlowWebsite",
-  description: "SlowWebsite blog and resources",
+  title: "pwa",
+  description: "pwa resources",
   manifest: "/manifest.json",
   icons: {
     icon: "/icon512_rounded.png",
