@@ -16,6 +16,7 @@ import { User, Phone, Mail, Shield, Save, Trash2, AlertTriangle, Edit, Lock, Hom
 import { FileUpload } from '@/components/ui/file-upload';
 import { PropertyService } from '@/services/property.service';
 import { Property } from '@/types';
+import { truncateText } from "@/lib/utils";
 
 interface User {
   _id: string;
@@ -452,41 +453,26 @@ export default function ProfilePage() {
                             <div className="mb-2 sm:mb-0">
                               <h3 className="text-xl font-semibold mb-1 hover:text-primary transition-colors cursor-pointer">
                                 <Link href={`/sale/properties/${property._id}`}>
-                                  {property.title}
+                                  {truncateText(property.title, 55)}
                                 </Link>
                               </h3>
                               <div className="flex items-center gap-1 text-muted-foreground mb-2">
                                 <MapPin className="w-4 h-4" />
-                                <span>{property.location.city}, {property.location.county}</span>
+                      <span className="text-sm truncate">{truncateText(`${property.location.city}, ${property.location.county}${property.location.zone ? `, ${property.location.zone}` : ''}`, 50)}</span>
                               </div>
                             </div>
                             <div className="text-left sm:text-right">
                               <div className="text-2xl font-bold text-primary">
                                 {property.price} {property.currency}
                               </div>
-                              <div className="text-sm text-muted-foreground">
-                                {property.propertyType === 'Apartament' ? 'chiria/lună' : 'preț'}
-                              </div>
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                            <div className="text-center">
-                              <div className="text-sm font-medium">{property.rooms}</div>
-                              <div className="text-xs text-muted-foreground">camere</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-sm font-medium">{property.area} mp</div>
-                              <div className="text-xs text-muted-foreground">suprafață</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-sm font-medium">{property.bathrooms}</div>
-                              <div className="text-xs text-muted-foreground">băi</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-sm font-medium">{property.propertyType}</div>
-                              <div className="text-xs text-muted-foreground">tip</div>
-                            </div>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-center text-sm text-muted-foreground">
+                              <div>{property.rooms ? `${property.rooms} camere` : property.propertyType}</div>
+                              <div>{property.area} mp</div>
+                              <div>{property.floor && property.totalFloors ? `Etaj ${property.floor}/${property.totalFloors}` : new Date(property.createdAt).toLocaleDateString('ro-RO')}</div>
+                              <div>{property.yearBuilt || (property.features.length > 0 ? `${property.features.length} fac.` : '')}</div>
                           </div>
 
                           <div className="flex items-center justify-between">
