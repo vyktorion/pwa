@@ -27,7 +27,7 @@ const withPWA = nextPwa({
     },
     {
       urlPattern: ({ url }: { url: URL }) => url.origin === self.location.origin && url.pathname.startsWith('/api/') && !url.pathname.startsWith('/api/auth/'),
-      handler: 'StaleWhileRevalidate',
+      handler: 'NetworkFirst',
       options: {
         cacheName: 'apis',
         networkTimeoutSeconds: 10,
@@ -35,10 +35,9 @@ const withPWA = nextPwa({
     },
     {
       urlPattern: ({ url }: { url: URL }) => url.origin === self.location.origin && !url.pathname.startsWith('/api/'),
-      handler: 'StaleWhileRevalidate',
+      handler: 'CacheFirst',
       options: {
         cacheName: 'others',
-        networkTimeoutSeconds: 10,
       },
     },
     {
