@@ -276,12 +276,12 @@ export default function ProfileClientMobile({ user, userProperties }: ProfileCli
         </div>
 
         {/* Tab Navigation - Mobile Optimized */}
-        <div className="flex border-b border-border mb-6 rounded-lg overflow-hidden bg-card">
+        <div className="flex gap-3 mb-6">
           <button
             onClick={() => setActiveTab('properties')}
             className={`flex-1 px-4 py-3 font-medium text-sm transition-colors cursor-pointer ${
               activeTab === 'properties'
-                ? 'border-b-2 border-primary text-primary bg-primary/5'
+                ? 'border-b-2 border-primary text-primary'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -291,7 +291,7 @@ export default function ProfileClientMobile({ user, userProperties }: ProfileCli
             onClick={() => setActiveTab('profile')}
             className={`flex-1 px-4 py-3 font-medium text-sm transition-colors cursor-pointer ${
               activeTab === 'profile'
-                ? 'border-b-2 border-primary text-primary bg-primary/5'
+                ? 'border-b-2 border-primary text-primary'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -305,7 +305,7 @@ export default function ProfileClientMobile({ user, userProperties }: ProfileCli
           <div className="space-y-4">
             {/* Properties Header */}
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-foreground">Proprietățile mele</h2>
+              <h2 className="text-xl font-bold text-foreground">Anunturile mele</h2>
               <Button asChild variant="default" size="sm" className="flex items-center gap-2 px-3 py-2 rounded-xl font-semibold">
                 <Link href="/sale/post" className="flex items-center gap-2 rounded-xl cursor-pointer">
                   <Plus className="w-4 h-4" />
@@ -315,24 +315,24 @@ export default function ProfileClientMobile({ user, userProperties }: ProfileCli
             </div>
 
             {/* Properties Stats - Mobile Grid */}
-            <div className="grid grid-cols-3 gap-3">
-              <Card className="p-3">
+            <div className="grid grid-cols-3 gap-3 ">
+              <Card className="p-1">
                 <div className="text-center">
-                  <Home className="w-6 h-6 text-primary mx-auto mb-1" />
+                  <Home className="w-4 h-4 text-primary mx-auto mb-1" />
                   <div className="text-lg font-bold">{userProperties.length}</div>
-                  <div className="text-xs text-muted-foreground">Proprietăți</div>
+                  <div className="text-xs text-muted-foreground">Anunturi</div>
                 </div>
               </Card>
-              <Card className="p-3">
+              <Card className="p-1">
                 <div className="text-center">
-                  <Eye className="w-6 h-6 text-primary mx-auto mb-1" />
+                  <Eye className="w-4 h-4 text-primary mx-auto mb-1" />
                   <div className="text-lg font-bold">0</div>
                   <div className="text-xs text-muted-foreground">Vizualizări</div>
                 </div>
               </Card>
-              <Card className="p-3">
+              <Card className="p-1">
                 <div className="text-center">
-                  <Heart className="w-6 h-6 text-primary mx-auto mb-1" />
+                  <Heart className="w-4 h-4 text-primary mx-auto mb-1" />
                   <div className="text-lg font-bold">0</div>
                   <div className="text-xs text-muted-foreground">Favorite</div>
                 </div>
@@ -361,7 +361,7 @@ export default function ProfileClientMobile({ user, userProperties }: ProfileCli
                 {userProperties.map((property) => (
                   <Card key={property._id} className="overflow-hidden">
                     <div className="flex">
-                      <div className="w-24 h-20 relative flex-shrink-0">
+                      <div className="w-24 h-20 relative shrink-0">
                         <Image
                           src={property.images[0] || "/placeholder-image.jpg"}
                           alt={property.title}
@@ -388,7 +388,7 @@ export default function ProfileClientMobile({ user, userProperties }: ProfileCli
                         </div>
 
                         <div className="flex items-center gap-1 text-muted-foreground mb-2">
-                          <MapPin className="w-3 h-3 flex-shrink-0" />
+                          <MapPin className="w-3 h-3 shrink-0" />
                           <span className="text-xs truncate">
                             {truncateText(`${property.location.city}, ${property.location.county}${property.location.zone ? `, ${property.location.zone}` : ''}`, 35)}
                           </span>

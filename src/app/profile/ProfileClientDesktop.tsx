@@ -288,7 +288,7 @@ export default function ProfileClientDesktop({ user, userProperties }: ProfileCl
                     : 'text-muted-foreground hover:text-foreground'
                   }`}
               >
-                Proprietățile mele ({userProperties.length})
+                Anunturile mele ({userProperties.length})
               </button>
               <button
                 onClick={() => setActiveTab('profile')}

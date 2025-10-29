@@ -22,6 +22,6 @@
 	"name": "SlowWebsite",
 	"short_name": "SlowWebsite",
 	"description": "SlowWebsite blog and resources",
-	"start_url": "/",
+	"start_url": "/?pwa=true",
 	"scope": "/"
 }

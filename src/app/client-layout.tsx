@@ -6,8 +6,10 @@ import Navbar from '@/components/Navbar';
 import { Toaster } from '@/components/ui/sonner';
 import InstallPrompt from '@/components/InstallPrompt';
 import Pwa from '@/components/pwa';
+import { MobileNav } from '@/components/ui/mobile-nav';
 import { Session } from 'next-auth';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { usePWA } from '@/hooks/use-pwa';
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -18,6 +20,9 @@ export default function ClientLayout({
   children,
   session,
 }: ClientLayoutProps) {
+  const [isMobile, setIsMobile] = useState(false);
+  const isPWA = usePWA();
+
   // Register Service Worker
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -32,15 +37,35 @@ export default function ClientLayout({
     }
   }, []);
 
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Show navbar only when:
+  // - Desktop: always
+  // - Mobile browser: yes, hide bottom nav
+  // - Mobile PWA: no, show bottom nav instead
+  const showNavbar = !isMobile || (isMobile && !isPWA);
+  const showBottomNav = isMobile && isPWA;
+
   return (
     <ThemeProvider>
       <SessionProvider session={session}>
         <div className="min-h-screen bg-background">
-          <Navbar session={session} />
-          <main>{children}</main>
+          {showNavbar && <Navbar session={session} />}
+          <main className={`${showBottomNav ? 'pb-20' : ''}`}>{children}</main>
           <Toaster />
           <InstallPrompt />
           <Pwa />
+          {showBottomNav && <MobileNav />}
         </div>
       </SessionProvider>
     </ThemeProvider>
