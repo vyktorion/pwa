@@ -1,7 +1,6 @@
 import { getServerSession } from 'next-auth/next';
 import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth/nextauth';
-import { PropertyService } from '@/services/property.service';
 import { MongoClient } from 'mongodb';
 import ProfileClient from './ProfileClient';
 
@@ -49,10 +48,10 @@ export default async function ProfilePage() {
     _id: session.user.id,
     name: session.user.name || '',
     email: session.user.email || '',
-    phone: (session.user as any).phone || undefined,
-    avatar: (session.user as any).avatar || session.user.image || undefined,
+    phone: (session.user as { phone?: string }).phone || undefined,
+    avatar: (session.user as { avatar?: string }).avatar || session.user.image || undefined,
     image: session.user.image || undefined,
-    role: (session.user as any).role || 'Proprietar'
+    role: (session.user as { role?: string }).role || 'Proprietar'
   };
 
   // Fetch user properties
@@ -66,12 +65,33 @@ export default async function ProfilePage() {
       .sort({ createdAt: -1 })
       .toArray();
 
-    userProperties = properties.map((prop: any) => ({
-      ...prop,
-      _id: prop._id.toString(),
-      createdAt: prop.createdAt.toISOString(),
-      updatedAt: prop.updatedAt?.toISOString() || prop.createdAt.toISOString(),
-    })) as Property[];
+    userProperties = properties.map((prop: unknown) => {
+      const property = prop as {
+        _id: { toString(): string };
+        createdAt: Date;
+        updatedAt?: Date;
+        title: string;
+        images: string[];
+        price: number;
+        currency: string;
+        location: { city: string; county: string; zone?: string };
+        rooms?: number;
+        area: number;
+        floor?: number;
+        totalFloors?: number;
+        yearBuilt?: number;
+        features: string[];
+        propertyType: string;
+        isActive: boolean;
+        [key: string]: unknown;
+      };
+      return {
+        ...property,
+        _id: property._id.toString(),
+        createdAt: property.createdAt.toISOString(),
+        updatedAt: property.updatedAt?.toISOString() || property.createdAt.toISOString(),
+      };
+    }) as Property[];
 
     await client.close();
   } catch (error) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { signOut } from 'next-auth/react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
