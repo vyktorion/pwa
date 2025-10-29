@@ -359,7 +359,7 @@ export default function ProfileClientMobile({ user, userProperties }: ProfileCli
             ) : (
               <div className="space-y-3">
                 {userProperties.map((property) => (
-                  <Card key={property._id} className="overflow-hidden">
+                  <Card key={property._id} className="overflow-hidden gap-2">
                     <div className="flex">
                       <div className="w-24 h-20 relative shrink-0">
                         <Image
@@ -375,16 +375,15 @@ export default function ProfileClientMobile({ user, userProperties }: ProfileCli
                           </Badge>
                         </div>
                       </div>
-                      <CardContent className="flex-1 p-3">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="text-sm font-semibold flex-1 pr-2">
-                            <Link href={`/sale/properties/${property._id}`} className="hover:text-primary transition-colors">
-                              {truncateText(property.title, 30)}
-                            </Link>
-                          </h3>
-                          <div className="text-sm font-bold text-primary text-right">
-                            {property.price} {property.currency}
-                          </div>
+                      <CardContent className="flex-1 px-3 pb-1">
+                        <h3 className="text-sm font-semibold mb-1">
+                          <Link href={`/sale/properties/${property._id}`} className="hover:text-primary transition-colors">
+                            {truncateText(property.title, 27)}
+                          </Link>
+                        </h3>
+                        <div className="flex items-center justify-between text-sm font-bold text-primary mb-2">
+                          <span>{property.price} {property.currency}</span>
+                          <span className="text-xs text-muted-foreground">{new Date(property.createdAt).toLocaleDateString('ro-RO', { month: 'short', day: 'numeric' })}</span>
                         </div>
 
                         <div className="flex items-center gap-1 text-muted-foreground mb-2">
@@ -394,7 +393,7 @@ export default function ProfileClientMobile({ user, userProperties }: ProfileCli
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-4 gap-1 text-xs text-muted-foreground mb-3">
+                        <div className="grid grid-cols-4 gap-1 text-xs text-muted-foreground mb-1">
                           <div className="text-center">{property.rooms ? `${property.rooms} cam.` : property.propertyType}</div>
                           <div className="text-center">{property.area} mp</div>
                           <div className="text-center">
@@ -402,56 +401,56 @@ export default function ProfileClientMobile({ user, userProperties }: ProfileCli
                           </div>
                           <div className="text-center">{property.yearBuilt || (property.features.length > 0 ? `${property.features.length}` : '')}</div>
                         </div>
-
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(property.createdAt).toLocaleDateString('ro-RO', { month: 'short', day: 'numeric' })}
-                          </span>
-                          <div className="flex gap-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              asChild
-                              className="h-7 w-7 p-0"
-                            >
-                              <Link href={`/sale/properties/${property._id}`}>
-                                <Eye className="w-3 h-3" />
-                              </Link>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              asChild
-                              className="h-7 w-7 p-0"
-                            >
-                              <Link href={`/sale/promote/${property._id}`}>
-                                <Star className="w-3 h-3" />
-                              </Link>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              asChild
-                              className="h-7 w-7 p-0"
-                            >
-                              <Link href={`/sale/edit/${property._id}`}>
-                                <Edit className="w-3 h-3" />
-                              </Link>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setPropertyToDelete(property);
-                                setShowDeletePropertyDialog(true);
-                              }}
-                              className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
                       </CardContent>
+                    </div>
+
+                   {/* Buttons */}
+                      <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                                className="flex items-center gap-2 rounded-xl px-4 py-1 font-semibold cursor-pointer mx-3 mb-1"
+                              >
+                                <Link href={`/sale/promote/${property._id}`} className="flex items-center gap-2 cursor-pointer">
+                                  <Star className="w-4 h-4" />
+                                  <span>Promoveaza</span>
+                                </Link>
+                              </Button>
+                    <div className="flex w-full justify-between px-3 gap-2 pb-3">
+                      <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                                className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold cursor-pointer flex-1 justify-center"
+                              >
+                                <Link href={`/sale/properties/${property._id}`} className="flex items-center gap-1 cursor-pointer">
+                                  <Eye className="w-3 h-3" />
+                                  <span>Vezi</span>
+                                </Link>
+                              </Button>
+                      <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                                className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold cursor-pointer flex-1 justify-center"
+                              >
+                                <Link href={`/sale/edit/${property._id}`} className="flex items-center gap-1 cursor-pointer">
+                                  <Edit className="w-3 h-3" />
+                                  <span>Editeaza</span>
+                                </Link>
+                              </Button>
+                      <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setPropertyToDelete(property);
+                                  setShowDeletePropertyDialog(true);
+                                }}
+                                className="flex items-center gap-1 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg px-2 py-1 text-xs font-semibold cursor-pointer flex-1 justify-center"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                <span>Șterge</span>
+                              </Button>
                     </div>
                   </Card>
                 ))}

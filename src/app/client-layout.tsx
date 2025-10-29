@@ -2,7 +2,7 @@
 
 import { SessionProvider } from 'next-auth/react';
 import { ThemeProvider } from '@/components/ui/theme-provider';
-import Navbar from '@/components/Navbar';
+import Navbar from '@/components/web/Navbar';
 import { Toaster } from '@/components/ui/sonner';
 import InstallPrompt from '@/components/InstallPrompt';
 import Pwa from '@/components/pwa';
