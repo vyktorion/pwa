@@ -18,10 +18,10 @@
 	"orientation": "any",
 	"display": "standalone",
 	"dir": "auto",
-	"lang": "en-US",
-	"name": "SlowWebsite",
-	"short_name": "SlowWebsite",
-	"description": "SlowWebsite blog and resources",
+	"lang": "ro-RO",
+	"name": "Imo",
+	"short_name": "Imo",
+	"description": "Imo",
 	"start_url": "/?pwa=true",
 	"scope": "/"
 }

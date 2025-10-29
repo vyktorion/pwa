@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Building, MessageSquare, User, Badge, Sun, Moon } from 'lucide-react';
@@ -14,18 +14,39 @@ export function MobileNav() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [unreadCount, setUnreadCount] = useState(0);
+  const lastFetchRef = useRef<number>(0);
+  const cacheRef = useRef<{ count: number; timestamp: number } | null>(null);
 
-  const fetchUnreadCount = async () => {
+  const fetchUnreadCount = useCallback(async (force = false) => {
+    const now = Date.now();
+    const CACHE_DURATION = 30000; // 30 seconds cache
+    const DEBOUNCE_DELAY = 2000; // 2 seconds debounce
+
+    // Check cache first
+    if (!force && cacheRef.current && (now - cacheRef.current.timestamp) < CACHE_DURATION) {
+      setUnreadCount(cacheRef.current.count);
+      return;
+    }
+
+    // Check debounce
+    if (!force && (now - lastFetchRef.current) < DEBOUNCE_DELAY) {
+      return;
+    }
+
+    lastFetchRef.current = now;
+
     try {
       const response = await fetch('/api/messages/unread');
       if (response.ok) {
         const data = await response.json();
-        setUnreadCount(data.unreadCount);
+        const count = data.unreadCount;
+        setUnreadCount(count);
+        cacheRef.current = { count, timestamp: now };
       }
     } catch (error) {
       console.error('Error fetching unread count:', error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     // Only fetch and listen when mobile AND PWA
@@ -33,17 +54,35 @@ export function MobileNav() {
 
     fetchUnreadCount();
 
+    // Prefetch critical routes for better performance
+    const prefetchRoutes = () => {
+      const routes = ['/messages', '/sale', '/profile'];
+      routes.forEach(route => {
+        if (route !== pathname) {
+          const link = document.createElement('link');
+          link.rel = 'prefetch';
+          link.href = route;
+          link.as = 'document';
+          document.head.appendChild(link);
+        }
+      });
+    };
+
+    // Prefetch after a short delay to not block initial load
+    const prefetchTimer = setTimeout(prefetchRoutes, 1000);
+
     // Listen for messages viewed events
     const handleMessagesViewed = () => {
-      fetchUnreadCount();
+      fetchUnreadCount(true); // Force refresh when messages are viewed
     };
 
     window.addEventListener('messagesViewed', handleMessagesViewed);
 
     return () => {
+      clearTimeout(prefetchTimer);
       window.removeEventListener('messagesViewed', handleMessagesViewed);
     };
-  }, [isMobile, isPWA]);
+  }, [isMobile, isPWA, fetchUnreadCount, pathname]);
 
   // Only show on mobile PWA
   if (!isMobile || !isPWA) {
@@ -94,7 +133,7 @@ export function MobileNav() {
               <button
                 key={item.href}
                 onClick={item.action}
-                className="flex flex-col items-center justify-center px-2 py-2 transition-all duration-200 min-w-0 flex-1 text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                className="flex flex-col items-center justify-center px-2 py-2 transition-colors duration-150 min-w-0 flex-1 text-muted-foreground hover:text-foreground hover:bg-accent/50 touch-manipulation"
               >
                 <div className="relative">
                   <item.icon className="w-5 h-5" />
@@ -110,7 +149,7 @@ export function MobileNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center px-2 py-2 transition-all duration-200 min-w-0 flex-1 ${
+              className={`flex flex-col items-center justify-center px-2 py-2 transition-colors duration-150 min-w-0 flex-1 touch-manipulation ${
                 item.active
                   ? 'text-primary'
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'

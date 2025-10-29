@@ -2,7 +2,11 @@ import { getServerSession } from 'next-auth/next';
 import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth/nextauth';
 import { MongoClient } from 'mongodb';
-import ProfileClient from './ProfileClient';
+import dynamic from 'next/dynamic';
+
+const ProfileClient = dynamic(() => import('./ProfileClient'), {
+  loading: () => <div className="min-h-screen flex items-center justify-center">Se încarcă...</div>
+});
 
 interface User {
   _id: string;

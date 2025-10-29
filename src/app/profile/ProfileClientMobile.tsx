@@ -229,7 +229,7 @@ export default function ProfileClientMobile({ user, userProperties }: ProfileCli
 
   return (
     <div className="min-h-screen bg-linear-to-br from-background via-background to-muted/20 md:hidden">
-      <div className="px-4 py-6">
+      <div className="px-4 py-6 h-screen overflow-y-auto scrollbar-hide">
         {/* Profile Header Card - Mobile Optimized */}
         <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden mb-6">
           <div className="bg-linear-to-r from-primary/10 to-primary/5 px-4 py-6">
