@@ -542,7 +542,7 @@ export default function ProfileClientMobile({ user, userProperties }: ProfileCli
                 Ștergere proprietate
               </DialogTitle>
               <DialogDescription className="text-sm">
-                Sunteți sigur că doriți să ştergeți proprietatea "{propertyToDelete?.title}"?
+                Sunteți sigur că doriți să ştergeți proprietatea &ldquo;{propertyToDelete?.title}&rdquo;?
                 Această acțiune nu poate fi anulată.
               </DialogDescription>
             </DialogHeader>
