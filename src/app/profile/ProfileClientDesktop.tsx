@@ -560,7 +560,7 @@ export default function ProfileClientDesktop({ user, userProperties }: ProfileCl
                   Ștergere proprietate
                 </DialogTitle>
                 <DialogDescription className="text-base">
-                  Sunteți sigur că doriți să ştergeți proprietatea "{propertyToDelete?.title}"?
+                  Sunteți sigur că doriți să ştergeți proprietatea &quot;{propertyToDelete?.title}&quot;?
                   Această acțiune nu poate fi anulată.
                 </DialogDescription>
               </DialogHeader>
