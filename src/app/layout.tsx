@@ -22,8 +22,8 @@ export const metadata: Metadata = {
   description: "pwa resources",
   manifest: "/manifest.json",
   icons: {
-    icon: "/icon512_rounded.png",
-    apple: "/icon512_maskable.png",
+    icon: "/favicon.png",
+    apple: "/favicon.png",
   },
 };
 
@@ -38,26 +38,26 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  
+
   const session = await getServerSession(authOptions);
   return (
-      <html lang="ro" suppressHydrationWarning>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+    <html lang="ro" suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
         >
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <ClientLayout session={session}>
-  {children}
-</ClientLayout>
+          <ClientLayout session={session}>
+            {children}
+          </ClientLayout>
 
-            <Pwa />
-          </ThemeProvider>
-        </body>
-      </html>
+          <Pwa />
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }
