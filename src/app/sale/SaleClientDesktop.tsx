@@ -100,7 +100,7 @@ export default function SaleClientDesktop({
         ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         : "space-y-4"
       }>
-        {properties.map((property, index) => {
+        {properties.map((property, propertyIndex) => {
           if (viewMode === 'grid') {
             return (
               <Link key={property._id} href={`/sale/properties/${property._id}`} className="block">
@@ -112,8 +112,8 @@ export default function SaleClientDesktop({
                       width={400}
                       height={225}
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      priority={index < 5}
-                      loading={index >= 5 ? "lazy" : "eager"}
+                      priority={propertyIndex < 5}
+                      loading={propertyIndex < 5 ? "eager" : "lazy"}
                     />
                     {/* Gradient pentru vizibilitate */}
                     <div className="absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent"></div>
@@ -157,8 +157,8 @@ export default function SaleClientDesktop({
                         width={288}
                         height={192}
                         className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                        priority={index < 5}
-                        loading={index >= 5 ? "lazy" : "eager"}
+                        priority={propertyIndex < 6}
+                        loading={propertyIndex < 6 ? "eager" : "lazy"}
                       />
                       <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-2 py-1 rounded text-sm font-medium">
                         {property.price} {property.currency}

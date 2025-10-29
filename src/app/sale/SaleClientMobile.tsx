@@ -35,7 +35,7 @@ interface SaleClientMobileProps {
 }
 
 // Image Carousel Component
-function ImageCarousel({ images, alt }: { images: string[], alt: string }) {
+function ImageCarousel({ images, alt, propertyIndex }: { images: string[], alt: string, propertyIndex: number }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
@@ -100,8 +100,8 @@ function ImageCarousel({ images, alt }: { images: string[], alt: string }) {
               width={400}
               height={225}
               className="w-full h-full object-cover"
-              priority={index < 5}
-              loading={index >= 5 ? "lazy" : "eager"}
+              priority={propertyIndex < 3 && index === 0}
+              loading={propertyIndex < 3 ? "eager" : index === 0 ? "eager" : "lazy"}
             />
           </div>
         ))}
@@ -190,9 +190,9 @@ export default function SaleClientMobile({
 
       {/* Properties Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {properties.map((property) => (
+        {properties.map((property, propertyIndex) => (
           <div key={property._id} className="bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow relative">
-            <ImageCarousel images={property.images} alt={property.title} />
+            <ImageCarousel images={property.images} alt={property.title} propertyIndex={propertyIndex} />
             <div className="absolute top-3 right-3 bg-[hsl(var(--accent))] text-[hsl(var(--background))] px-2 py-1 rounded text-sm font-medium z-30">
               {formatPrice(property.price)} {property.currency}
             </div>
