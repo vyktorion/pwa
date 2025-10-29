@@ -6,7 +6,7 @@ import {
   createConversation,
   getConversationByParticipantsAndProperty
 } from '@/services/conversation.service';
-import clientPromise from '@/lib/mongodb';
+import { saleDbClient } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
 export async function GET() {
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get property details
-    const client = await clientPromise;
+    const client = await saleDbClient;
     const db = client.db();
     const property = await db.collection('properties').findOne({ _id: new ObjectId(propertyId) });
     if (!property) {
@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
     // Update conversation with last message
     await updateConversationLastMessage(conversation._id, newMessage);
 
+    console.log('🎉 [POST /api/conversations] Success - returning conversation and message');
     return NextResponse.json({
       conversation,
       message: newMessage,

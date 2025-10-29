@@ -47,10 +47,9 @@ export default function Navbar({ session: serverSession }: NavbarProps) {
         fetchUnreadCount();
       }, 1000); // Întârzie cu 1 secundă
 
-      // Listen for messages viewed events only
+      // Listen for messages viewed events - update immediately
       const handleMessagesViewed = () => {
-        // Small delay to ensure messages are marked as read
-        setTimeout(fetchUnreadCount, 1000);
+        fetchUnreadCount();
       };
 
       window.addEventListener('messagesViewed', handleMessagesViewed);

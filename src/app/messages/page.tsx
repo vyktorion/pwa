@@ -162,6 +162,11 @@ export default function MessagesPage() {
         const message = await response.json();
         setNewMessage('');
 
+        toast({
+          title: "Mesaj trimis",
+          description: "Mesajul tău a fost trimis cu succes!",
+        });
+
         // Update conversation with new message
         setConversations(prev =>
           prev.map(conv =>

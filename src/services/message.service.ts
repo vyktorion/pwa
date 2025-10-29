@@ -7,6 +7,7 @@ export async function createMessage(
   senderId: string,
   content: string
 ): Promise<Message> {
+  console.log('💬 [createMessage] Creating message for conversation:', conversationId, 'from user:', senderId);
   const client = await clientPromise;
   const db = client.db('imo9');
 
@@ -18,7 +19,9 @@ export async function createMessage(
     createdAt: new Date(),
   };
 
+  console.log('📝 [createMessage] Message data:', message);
   const result = await db.collection('messages').insertOne(message);
+  console.log('✅ [createMessage] Message inserted with ID:', result.insertedId);
 
   return {
     _id: result.insertedId.toString(),
@@ -27,14 +30,22 @@ export async function createMessage(
 }
 
 export async function getMessagesByConversationId(conversationId: string): Promise<Message[]> {
+  console.log('🔍 [getMessagesByConversationId] Looking for messages in conversation:', conversationId);
   const client = await clientPromise;
   const db = client.db('imo9');
+
+  // First check all messages in the database to debug
+  const allMessages = await db.collection('messages').find({}).limit(10).toArray();
+  console.log('📊 [getMessagesByConversationId] Sample of ALL messages in DB:', allMessages.map(m => ({ id: m._id, convId: m.conversationId, content: m.content?.substring(0, 30), sender: m.senderId })));
 
   const messages = await db
     .collection('messages')
     .find({ conversationId })
     .sort({ createdAt: 1 })
     .toArray();
+
+  console.log('💬 [getMessagesByConversationId] Raw messages found:', messages.length);
+  console.log('💬 [getMessagesByConversationId] Messages content:', messages.map(m => ({ id: m._id, content: m.content, sender: m.senderId })));
 
   return messages.map(msg => ({
     ...msg,

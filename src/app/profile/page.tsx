@@ -183,7 +183,7 @@ export default function ProfilePage() {
       setUserProperties(prev => prev.filter(p => p._id !== propertyToDelete._id));
       toast({
         title: "Succes",
-        description: "Proprietatea a fost ștearsă cu succes",
+        description: "Proprietatea a fost ștearsă",
       });
     } catch (error) {
       console.error('Error deleting property:', error);
@@ -242,7 +242,7 @@ export default function ProfilePage() {
       if (response.ok) {
         toast({
           title: "Succes",
-          description: "Parola a fost schimbată cu succes!",
+          description: "Parola a fost schimbată!",
         });
         setShowChangePasswordDialog(false);
         e.currentTarget.reset();
@@ -269,7 +269,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-foreground">Se încarcă...</p>
         </div>
       </div>
@@ -311,8 +311,8 @@ export default function ProfilePage() {
                     <Shield className="w-4 h-4 text-primary" />
                     <span className="text-sm font-medium text-foreground">
                       {user.role === 'Proprietar' ? 'Proprietar' :
-                       user.role === 'Agent' ? 'Agent imobiliar' :
-                       user.role === 'Agenție' ? 'Agenție imobiliară' : 'Dezvoltator'}
+                        user.role === 'Agent' ? 'Agent imobiliar' :
+                          user.role === 'Agenție' ? 'Agenție imobiliară' : 'Dezvoltator'}
                     </span>
                   </div>
                 </div>
@@ -325,21 +325,19 @@ export default function ProfilePage() {
             <div className="flex">
               <button
                 onClick={() => setActiveTab('properties')}
-                className={`px-6 py-3 font-medium transition-colors ${
-                  activeTab === 'properties'
+                className={`px-6 py-3 font-medium transition-colors cursor-pointer ${activeTab === 'properties'
                     ? 'border-b-2 border-primary text-primary'
                     : 'text-muted-foreground hover:text-foreground'
-                }`}
+                  }`}
               >
                 Proprietățile mele ({userProperties.length})
               </button>
               <button
                 onClick={() => setActiveTab('profile')}
-                className={`px-6 py-3 font-medium transition-colors ${
-                  activeTab === 'profile'
+                className={`px-6 py-3 font-medium transition-colors cursor-pointer ${activeTab === 'profile'
                     ? 'border-b-2 border-primary text-primary'
                     : 'text-muted-foreground hover:text-foreground'
-                }`}
+                  }`}
               >
                 Informații personale
               </button>
@@ -347,10 +345,10 @@ export default function ProfilePage() {
 
             {/* Logout Button */}
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => signOut({ callbackUrl: '/' })}
-              className="flex items-center gap-2 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg px-4 py-2 font-semibold"
+              className="flex items-center gap-2 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl px-4 py-2 font-semibold cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               Deconectare
@@ -363,10 +361,10 @@ export default function ProfilePage() {
               {/* Properties Header */}
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-foreground">Proprietățile mele</h2>
-                <Button asChild>
-                  <Link href="/sale/post">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Adaugă proprietate
+                <Button asChild variant="default" className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold">
+                  <Link href="/sale/post" className="flex items-center gap-2 rounded-xl cursor-pointer">
+                    <Plus className="w-4 h-4" />
+                    <span>Adaugă proprietate</span>
                   </Link>
                 </Button>
               </div>
@@ -423,7 +421,7 @@ export default function ProfilePage() {
                       Nu ai adăugat încă nicio proprietate. Începe prin a adăuga prima proprietate.
                     </p>
                     <Button asChild>
-                      <Link href="/sale/post">
+                      <Link href="/sale/post" className="cursor-pointer">
                         <Plus className="w-4 h-4 mr-2" />
                         Adaugă prima proprietate
                       </Link>
@@ -496,19 +494,38 @@ export default function ProfilePage() {
                               Postat {new Date(property.createdAt).toLocaleDateString('ro-RO')}
                             </div>
                             <div className="flex gap-2">
-                              <Button variant="outline" size="sm" asChild>
-                                <Link href={`/sale/properties/${property._id}`}>
-                                  <Eye className="w-4 h-4 mr-1" />
-                                  Vezi
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                                className="flex items-center gap-2 rounded-xl px-4 py-2 font-semibold cursor-pointer"
+                              >
+                                <Link href={`/sale/properties/${property._id}`} className="flex items-center gap-2 cursor-pointer">
+                                  <Eye className="w-4 h-4" />
+                                  <span>Vezi</span>
                                 </Link>
                               </Button>
-                              <Button variant="outline" size="sm">
-                                <Star className="w-4 h-4 mr-1" />
-                                Promovează
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                                className="flex items-center gap-2 rounded-xl px-4 py-2 font-semibold cursor-pointer"
+                              >
+                                <Link href={`/sale/promote/${property._id}`} className="flex items-center gap-2 cursor-pointer">
+                                  <Star className="w-4 h-4" />
+                                  <span>Promovează</span>
+                                </Link>
                               </Button>
-                              <Button variant="outline" size="sm" onClick={() => router.push(`/sale/edit/${property._id}`)}>
-                                <Edit className="w-4 h-4 mr-1" />
-                                Editează
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                                className="flex items-center gap-2 rounded-xl px-4 py-2 font-semibold cursor-pointer"
+                              >
+                                <Link href={`/sale/edit/${property._id}`} className="flex items-center gap-2 cursor-pointer">
+                                  <Edit className="w-4 h-4" />
+                                  <span>Editează</span>
+                                </Link>
                               </Button>
                               <Button
                                 variant="outline"
@@ -517,7 +534,7 @@ export default function ProfilePage() {
                                   setPropertyToDelete(property);
                                   setShowDeletePropertyDialog(true);
                                 }}
-                                className="text-destructive hover:text-destructive"
+                                className="flex items-center gap-2 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl px-4 py-2 font-semibold cursor-pointer"
                               >
                                 <Trash2 className="w-4 h-4 mr-1" />
                                 Șterge
@@ -564,8 +581,8 @@ export default function ProfilePage() {
                     <label className="text-sm font-medium text-muted-foreground">Rol în platformă</label>
                     <p className="text-foreground">
                       {user.role === 'Proprietar' ? 'Proprietar' :
-                       user.role === 'Agent' ? 'Agent imobiliar' :
-                       user.role === 'Agenție' ? 'Agenție imobiliară' : 'Dezvoltator'}
+                        user.role === 'Agent' ? 'Agent imobiliar' :
+                          user.role === 'Agenție' ? 'Agenție imobiliară' : 'Dezvoltator'}
                     </p>
                   </div>
                 </div>
@@ -623,14 +640,14 @@ export default function ProfilePage() {
                 <Button
                   variant="outline"
                   onClick={() => setShowDeletePropertyDialog(false)}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto cursor-pointer"
                 >
                   Anulează
                 </Button>
                 <Button
                   variant="destructive"
                   onClick={handleDeleteProperty}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Șterge proprietatea
@@ -643,7 +660,7 @@ export default function ProfilePage() {
 
       {/* Edit Profile Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-  <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-[425px] overflow-x-hidden">
+        <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-[425px] overflow-x-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Edit className="w-5 h-5" />
@@ -664,7 +681,7 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <label htmlFor="edit-name" className="flex items-center gap-2 text-sm font-medium text-foreground">
                   <User className="w-4 h-4" />
-                  Nume 
+                  Nume
                 </label>
                 <input
                   type="text"
@@ -729,14 +746,14 @@ export default function ProfilePage() {
                 type="button"
                 variant="outline"
                 onClick={() => setShowEditDialog(false)}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto cursor-pointer"
               >
                 Anulează
               </Button>
               <Button
                 type="submit"
                 disabled={saving}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto cursor-pointer"
               >
                 <Save className="w-4 h-4 mr-2" />
                 {saving ? 'Se salvează...' : 'Salvează'}
@@ -810,14 +827,14 @@ export default function ProfilePage() {
                 type="button"
                 variant="outline"
                 onClick={() => setShowChangePasswordDialog(false)}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto cursor-pointer"
               >
                 Anulează
               </Button>
               <Button
                 type="submit"
                 disabled={saving}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto cursor-pointer"
               >
                 <Lock className="w-4 h-4 mr-2" />
                 {saving ? 'Se schimbă...' : 'Schimbă parola'}
@@ -829,7 +846,7 @@ export default function ProfilePage() {
 
       {/* Delete Confirm Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-  <DialogContent>
+        <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <AlertTriangle className="w-5 h-5" />
@@ -851,14 +868,14 @@ export default function ProfilePage() {
             <Button
               variant="outline"
               onClick={() => setShowDeleteDialog(false)}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto cursor-pointer"
             >
               Anulează
             </Button>
             <Button
               variant="destructive"
               onClick={handleDeleteAccount}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto cursor-pointer"
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Șterge definitiv contul

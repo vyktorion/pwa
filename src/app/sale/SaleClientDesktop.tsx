@@ -148,7 +148,7 @@ export default function SaleClientDesktop({
           } else {
             return (
               <Link key={property._id} href={`/sale/properties/${property._id}`} className="block">
-                <div className="bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                <div className="bg-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                   <div className="flex flex-col sm:flex-row">
                     <div className="sm:w-80 h-48 relative overflow-hidden rounded">
                       <Image
