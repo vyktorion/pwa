@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ProfileClientDesktop from './ProfileClientDesktop';
 import ProfileClientMobile from './ProfileClientMobile';
@@ -41,7 +42,7 @@ interface ProfileClientProps {
   userProperties: Property[];
 }
 
-export default function ProfileClient({ user, userProperties }: ProfileClientProps) {
+const ProfileClient = React.memo(({ user, userProperties }: ProfileClientProps) => {
   const isMobile = useIsMobile();
 
   return isMobile ? (
@@ -49,4 +50,8 @@ export default function ProfileClient({ user, userProperties }: ProfileClientPro
   ) : (
     <ProfileClientDesktop user={user} userProperties={userProperties} />
   );
-}
+});
+
+ProfileClient.displayName = 'ProfileClient';
+
+export default ProfileClient;

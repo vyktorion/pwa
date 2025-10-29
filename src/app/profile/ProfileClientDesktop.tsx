@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { signOut } from 'next-auth/react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -52,7 +52,7 @@ interface ProfileClientDesktopProps {
   userProperties: Property[];
 }
 
-export default function ProfileClientDesktop({ user, userProperties }: ProfileClientDesktopProps) {
+const ProfileClientDesktop = React.memo(function ProfileClientDesktop({ user, userProperties }: ProfileClientDesktopProps) {
   const [saving, setSaving] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -90,8 +90,12 @@ export default function ProfileClientDesktop({ user, userProperties }: ProfileCl
           title: "Succes",
           description: "Profil actualizat cu succes!",
         });
-        window.location.reload();
+        // Instead of reload, update user state and close dialog
         setShowEditDialog(false);
+        // Optionally dispatch custom event or use context to update parent state
+        window.dispatchEvent(new CustomEvent('profileUpdated', {
+          detail: { name: formData.get('name'), phone: formData.get('phone'), role: role, avatar: avatarUrl }
+        }));
       } else {
         const errorData = await response.json();
         toast({
@@ -146,7 +150,10 @@ export default function ProfileClientDesktop({ user, userProperties }: ProfileCl
         title: "Succes",
         description: "Proprietatea a fost ștearsă",
       });
-      window.location.reload();
+      // Instead of reload, dispatch event to update parent state
+      window.dispatchEvent(new CustomEvent('propertyDeleted', {
+        detail: { propertyId: propertyToDelete._id }
+      }));
     } catch (error) {
       console.error('Error deleting property:', error);
       toast({
@@ -813,4 +820,8 @@ export default function ProfileClientDesktop({ user, userProperties }: ProfileCl
       </div>
     </div>
   );
-}
+});
+
+ProfileClientDesktop.displayName = 'ProfileClientDesktop';
+
+export default ProfileClientDesktop;

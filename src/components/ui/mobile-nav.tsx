@@ -54,23 +54,6 @@ export function MobileNav() {
 
     fetchUnreadCount();
 
-    // Prefetch critical routes for better performance
-    const prefetchRoutes = () => {
-      const routes = ['/messages', '/sale', '/profile'];
-      routes.forEach(route => {
-        if (route !== pathname) {
-          const link = document.createElement('link');
-          link.rel = 'prefetch';
-          link.href = route;
-          link.as = 'document';
-          document.head.appendChild(link);
-        }
-      });
-    };
-
-    // Prefetch after a short delay to not block initial load
-    const prefetchTimer = setTimeout(prefetchRoutes, 1000);
-
     // Listen for messages viewed events
     const handleMessagesViewed = () => {
       fetchUnreadCount(true); // Force refresh when messages are viewed
@@ -79,10 +62,9 @@ export function MobileNav() {
     window.addEventListener('messagesViewed', handleMessagesViewed);
 
     return () => {
-      clearTimeout(prefetchTimer);
       window.removeEventListener('messagesViewed', handleMessagesViewed);
     };
-  }, [isMobile, isPWA, fetchUnreadCount, pathname]);
+  }, [isMobile, isPWA, fetchUnreadCount]);
 
   // Only show on mobile PWA
   if (!isMobile || !isPWA) {
