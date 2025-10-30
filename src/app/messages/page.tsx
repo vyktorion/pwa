@@ -416,7 +416,7 @@ export default function MessagesPage() {
                               </span>
                             </div>
                           </div>
-                          <p className={`mb-2 ${conversation.lastMessage ? 'text-muted-foreground' : 'text-destructive font-medium'}`}>
+                          <p className={`mb-2 ${conversation.unreadCount > 0 ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
                             <span className="font-medium text-foreground">
                               {conversation.lastMessage?.senderId === session.user.id ? 'Tu: ' : ''}
                             </span>
