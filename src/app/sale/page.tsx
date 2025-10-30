@@ -20,7 +20,6 @@ async function getInitialProperties() {
       _id: prop._id.toString(),
     })) as Property[];
   } catch {
-    // eslint-disable-next-line no-unused-vars
     return [];
   }
 }

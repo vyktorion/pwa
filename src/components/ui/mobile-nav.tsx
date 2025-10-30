@@ -4,13 +4,11 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Building, MessageSquare, User, Badge, Sun, Moon } from 'lucide-react';
-import { usePWA } from '@/hooks/use-pwa';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from "next-themes";
 import { useSession } from 'next-auth/react';
 
 export function MobileNav() {
-  const isPWA = usePWA();
   const isMobile = useIsMobile();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
@@ -56,15 +54,17 @@ export function MobileNav() {
 
     fetchUnreadCount();
 
-    // Listen for messages viewed events
-    const handleMessagesViewed = () => {
-      fetchUnreadCount(true); // Force refresh when messages are viewed
+    // Listen for messages events
+    const handleUpdate = () => {
+      fetchUnreadCount(true); // Force refresh when messages are viewed or new messages arrive
     };
 
-    window.addEventListener('messagesViewed', handleMessagesViewed);
+    window.addEventListener('newMessage', handleUpdate);
+    window.addEventListener('messagesViewed', handleUpdate);
 
     return () => {
-      window.removeEventListener('messagesViewed', handleMessagesViewed);
+      window.removeEventListener('newMessage', handleUpdate);
+      window.removeEventListener('messagesViewed', handleUpdate);
     };
   }, [isMobile, session?.user, fetchUnreadCount]);
 

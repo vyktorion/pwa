@@ -9,6 +9,7 @@ import {
 import { updateConversationLastMessage } from '@/services/conversation.service';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
+import { sendPushNotification } from '@/lib/push';
 
 export async function GET(request: NextRequest) {
   console.log('📨 [GET /api/messages] Received request');
@@ -93,6 +94,48 @@ export async function POST(request: NextRequest) {
 
     // Update conversation with last message
     await updateConversationLastMessage(conversationId, message);
+
+    // Send push notification to other participants
+    try {
+      const conversation = await db.collection('conversations').findOne({
+        _id: new ObjectId(conversationId)
+      });
+
+      if (conversation) {
+        // Find other participants (exclude sender)
+        const recipients = conversation.participants.filter(
+          (participantId: string) => participantId !== session.user.id
+        );
+
+        // Send push to each recipient
+        for (const recipientId of recipients) {
+          const recipient = await db.collection('users').findOne({
+            _id: new ObjectId(recipientId)
+          });
+
+          console.log(`🔍 Checking push subscription for recipient ${recipientId}:`, !!recipient?.pushSubscription);
+
+          if (recipient?.pushSubscription) {
+            const payload = {
+              title: `Nou mesaj de la ${session.user.name || 'Utilizator'}`,
+              body: content.length > 50 ? content.substring(0, 50) + '...' : content,
+              conversationId,
+              senderId: session.user.id,
+              senderName: session.user.name || 'Utilizator'
+            };
+
+            console.log('📤 Sending push notification to:', recipientId, 'payload:', payload);
+            const result = await sendPushNotification(recipient.pushSubscription, payload);
+            console.log('📤 Push notification result:', result);
+          } else {
+            console.log('⚠️ No push subscription for recipient:', recipientId);
+          }
+        }
+      }
+    } catch (pushError) {
+      console.error('⚠️ Push notification failed, but message was saved:', pushError);
+      // Don't fail the request if push fails
+    }
 
     console.log('🎉 [POST /api/messages] Success - returning message');
     return NextResponse.json(message);

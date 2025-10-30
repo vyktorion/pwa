@@ -38,13 +38,27 @@ export async function getMessagesByConversationId(conversationId: string): Promi
   const allMessages = await db.collection('messages').find({}).limit(10).toArray();
   console.log('📊 [getMessagesByConversationId] Sample of ALL messages in DB:', allMessages.map(m => ({ id: m._id, convId: m.conversationId, content: m.content?.substring(0, 30), sender: m.senderId })));
 
-  const messages = await db
+  // Try both string and ObjectId queries to debug
+  console.log('🔍 [getMessagesByConversationId] Searching with string:', conversationId);
+  const messagesByString = await db
     .collection('messages')
     .find({ conversationId })
     .sort({ createdAt: 1 })
     .toArray();
+  console.log('💬 [getMessagesByConversationId] Messages found with string query:', messagesByString.length);
 
-  console.log('💬 [getMessagesByConversationId] Raw messages found:', messages.length);
+  console.log('🔍 [getMessagesByConversationId] Searching with ObjectId:', conversationId);
+  const messagesByObjectId = await db
+    .collection('messages')
+    .find({ conversationId: new ObjectId(conversationId) })
+    .sort({ createdAt: 1 })
+    .toArray();
+  console.log('💬 [getMessagesByConversationId] Messages found with ObjectId query:', messagesByObjectId.length);
+
+  // Use the one that finds messages
+  const messages = messagesByString.length > 0 ? messagesByString : messagesByObjectId;
+
+  console.log('💬 [getMessagesByConversationId] Final messages found:', messages.length);
   console.log('💬 [getMessagesByConversationId] Messages content:', messages.map(m => ({ id: m._id, content: m.content, sender: m.senderId })));
 
   return messages.map(msg => ({

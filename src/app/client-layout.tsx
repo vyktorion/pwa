@@ -7,9 +7,9 @@ import { Toaster } from '@/components/ui/sonner';
 import InstallPrompt from '@/components/InstallPrompt';
 import Pwa from '@/components/pwa';
 import { MobileNav } from '@/components/ui/mobile-nav';
+import MessageHandler from '@/components/MessageHandler';
 import { Session } from 'next-auth';
 import { useEffect, useState } from 'react';
-import { usePWA } from '@/hooks/use-pwa';
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -21,7 +21,6 @@ export default function ClientLayout({
   session,
 }: ClientLayoutProps) {
   const [isMobile, setIsMobile] = useState(false);
-  const isPWA = usePWA();
 
   // Register Service Worker
   useEffect(() => {
@@ -62,6 +61,7 @@ export default function ClientLayout({
           <Toaster />
           <InstallPrompt />
           <Pwa />
+          <MessageHandler />
           {showBottomNav && <MobileNav />}
         </div>
       </SessionProvider>

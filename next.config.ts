@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
 const withPWA = nextPwa({
   dest: "src/public",
   register: true,
+  disable: process.env.NODE_ENV === 'development',
   runtimeCaching: [
     {
       urlPattern: ({ url }: { url: URL }) => url.pathname === '/',

@@ -43,15 +43,49 @@ export default function MessagesPage() {
     }
   }, []);
 
-  // Refresh navbar when conversations are loaded
+  // Refresh navbar when conversations are loaded (only once)
   useEffect(() => {
     if (!loading && conversations.length >= 0) {
       // Trigger navbar refresh by dispatching a custom event
       window.dispatchEvent(new CustomEvent('messagesViewed'));
     }
-  }, [loading, conversations.length]);
+  }, [loading]); // Removed conversations.length to prevent excessive triggers
 
   // Messages are now included in conversation data, no need for separate fetch
+
+  const refreshChat = useCallback(async (conversationId: string) => {
+    try {
+      const res = await fetch(`/api/messages?conversationId=${conversationId}`);
+      const messages = await res.json();
+      setCurrentMessages(messages);
+
+      // Marchează ca citit
+      await fetch(`/api/conversations/${conversationId}/read`, { method: 'POST' });
+    } catch (error) {
+      console.error('Refresh chat failed:', error);
+    }
+  }, []);
+
+  // Handle new messages from Service Worker
+  useEffect(() => {
+    const handleNewMessage = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { conversationId } = customEvent.detail;
+
+      console.log('📨 New message received for conversation:', conversationId);
+
+      // Refresh conversations list for counters
+      fetchConversations();
+
+      // If we're in the chat for this conversation, refresh messages
+      if (selectedConversation?._id === conversationId) {
+        refreshChat(conversationId);
+      }
+    };
+
+    window.addEventListener('newMessage', handleNewMessage);
+    return () => window.removeEventListener('newMessage', handleNewMessage);
+  }, [selectedConversation?._id]); // Simplified dependencies
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -61,9 +95,9 @@ export default function MessagesPage() {
     }
 
     fetchConversations();
-  }, [session, status, router, fetchConversations]);
+  }, [session, status, router]); // Removed fetchConversations dependency
 
-  // Refresh conversations when window regains focus
+  // Refresh conversations when window regains focus (optional, minimal polling)
   useEffect(() => {
     const handleFocus = () => {
       if (session?.user?.id) {
@@ -73,11 +107,12 @@ export default function MessagesPage() {
 
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [session?.user?.id, fetchConversations]);
+  }, [session?.user?.id]); // Removed fetchConversations dependency
 
+  // Mark conversation as read when messages are loaded (not just selected)
   useEffect(() => {
-    if (selectedConversation) {
-      // Mark conversation as read when selected
+    if (selectedConversation && currentMessages.length > 0) {
+      console.log('👀 Messages visible, marking conversation as read:', selectedConversation._id);
       fetch('/api/conversations/' + selectedConversation._id + '/read', {
         method: 'POST',
       }).then(() => {
@@ -89,36 +124,34 @@ export default function MessagesPage() {
               : conv
           )
         );
+        // Trigger navbar update
+        window.dispatchEvent(new CustomEvent('messagesViewed'));
       }).catch(error => {
         console.error('Error marking conversation as read:', error);
       });
     }
-  }, [selectedConversation]);
+  }, [selectedConversation?._id, currentMessages.length]); // Only when messages are actually loaded
 
-  // Open chat modal when conversation is selected
+  // Open chat modal and always fetch fresh messages
   useEffect(() => {
     if (selectedConversation) {
-      // Dacă conversația nu are messages încărcate, încarcă-le
-      if (!selectedConversation.messages || selectedConversation.messages.length === 0) {
-        fetch(`/api/messages?conversationId=${selectedConversation._id}`)
-          .then(res => res.json())
-          .then(messages => {
-            setCurrentMessages(messages);
-            setConversations(prev => prev.map(conv =>
-              conv._id === selectedConversation._id
-                ? { ...conv, messages }
-                : conv
-            ));
-          })
-          .catch(error => {
-            console.error('Error loading messages:', error);
-          });
-      } else {
-        setCurrentMessages(selectedConversation.messages);
-      }
+      console.log('💬 Opening chat for conversation:', selectedConversation._id);
+
+      // Always fetch fresh messages when opening chat
+      fetch(`/api/messages?conversationId=${selectedConversation._id}`)
+        .then(res => res.json())
+        .then(messages => {
+          console.log('📨 Fresh messages loaded:', messages.length);
+          setCurrentMessages(messages);
+        })
+        .catch(error => {
+          console.error('Error loading messages:', error);
+          setCurrentMessages([]);
+        });
+
       setShowChatModal(true);
     }
-  }, [selectedConversation]);
+  }, [selectedConversation?._id]); // Only depend on conversation ID
 
   // Auto-scroll la ultimul mesaj DOAR la deschiderea modalului
   useEffect(() => {
@@ -184,9 +217,6 @@ export default function MessagesPage() {
 
         // Update currentMessages for instant display
         setCurrentMessages(prev => [...prev, message]);
-
-        // Refresh navbar unread count
-        window.dispatchEvent(new CustomEvent('messagesViewed'));
       } else {
         const errorData = await response.json();
         toast({

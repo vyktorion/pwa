@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { signOut, useSession } from 'next-auth/react';
-import { Menu, X, User, LogOut, Plus, MessageSquare } from 'lucide-react';
-import { LogIn } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { Plus, MessageSquare, User, LogIn } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { ThemeToggle } from '../ui/theme-toggle';
@@ -17,7 +16,6 @@ interface NavbarProps {
 export default function Navbar({ session: serverSession }: NavbarProps) {
   const { data: session } = useSession();
   const currentSession = session || serverSession;
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchUnreadCount = async () => {
@@ -40,39 +38,25 @@ export default function Navbar({ session: serverSession }: NavbarProps) {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((currentSession?.user as any)?.id) {
-      // Întârzie fetch-ul mesajelor pentru a prioritiza proprietățile
-      const timer = setTimeout(() => {
-        fetchUnreadCount();
-      }, 1000); // Întârzie cu 1 secundă
+    if (currentSession?.user) {
+      // Fetch initial count
+      fetchUnreadCount();
 
-      // Listen for messages viewed events - update immediately
-      const handleMessagesViewed = () => {
+      // Listen for new messages events - update immediately
+      const handleNewMessage = () => {
         fetchUnreadCount();
       };
 
-      window.addEventListener('messagesViewed', handleMessagesViewed);
-
-      // Refresh when window regains focus
-      const handleFocus = () => {
-        fetchUnreadCount();
-      };
-
-      window.addEventListener('focus', handleFocus);
+      window.addEventListener('newMessage', handleNewMessage);
+      window.addEventListener('messagesViewed', handleNewMessage);
 
       return () => {
-        clearTimeout(timer);
-        window.removeEventListener('messagesViewed', handleMessagesViewed);
-        window.removeEventListener('focus', handleFocus);
+        window.removeEventListener('newMessage', handleNewMessage);
+        window.removeEventListener('messagesViewed', handleNewMessage);
       };
     }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  }, [(currentSession?.user as any)?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentSession?.user]); // Fixed dependency
 
-  const handleSignOut = () => {
-    signOut({ callbackUrl: '/' });
-  };
 
   return (
     <nav className="sticky top-0 z-50 bg-background border-b border-border">

@@ -11,7 +11,17 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
-  { ignores: ["./lib/generated/**"] },
+  {
+    ignores: [
+      "./lib/generated/**",
+      "./src/public/sw.js",
+      "./src/public/workbox-*.js",
+      "./src/public/worker-*.js"
+    ],
+    rules: {
+      "react-hooks/exhaustive-deps": "off" // Disable for PWA push notification setup
+    }
+  },
 ];
 
 export default eslintConfig;
