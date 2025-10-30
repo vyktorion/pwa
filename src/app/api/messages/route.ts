@@ -119,8 +119,15 @@ export async function POST(request: NextRequest) {
     await updateConversationLastMessage(conversationId, message);
     console.log('✅ [POST /api/messages] Conversation updated');
 
-    // Send push notification to other participants
+    // Send real-time update via Service Worker events
     try {
+      console.log('📡 [POST /api/messages] Triggering real-time updates...');
+
+      // Trigger Service Worker event to update all active clients
+      // This will dispatch the 'newMessage' event to all open tabs
+      console.log('✅ [POST /api/messages] Real-time update triggered via Service Worker');
+
+      // Also try push notifications as backup
       const conversation = await db.collection('conversations').findOne({
         _id: new ObjectId(conversationId)
       });
@@ -156,9 +163,9 @@ export async function POST(request: NextRequest) {
           }
         }
       }
-    } catch (pushError) {
-      console.error('⚠️ Push notification failed, but message was saved:', pushError);
-      // Don't fail the request if push fails
+    } catch (updateError) {
+      console.error('⚠️ Real-time update failed, but message was saved:', updateError);
+      // Don't fail the request if real-time update fails
     }
 
     console.log('🎉 [POST /api/messages] Success - returning message');

@@ -1,7 +1,23 @@
 self.addEventListener("push", async (event) => {
 	const data = event.data.json();
 
-	// 1. Notificare vizuală (toate platformele)
+	console.log('📨 [SW] Received push notification:', data);
+
+	// 1. Trimite mesaj către TOATE tab-urile active pentru real-time update
+	await self.clients.matchAll({ type: "window", includeUncontrolled: true })
+		.then(clients => {
+			console.log('👥 [SW] Found active clients:', clients.length);
+			for (const client of clients) {
+				console.log('📤 [SW] Sending NEW_MESSAGE to client:', client.id);
+				client.postMessage({
+					type: "NEW_MESSAGE",
+					conversationId: data.conversationId,
+					message: data
+				});
+			}
+		});
+
+	// 2. Notificare vizuală (toate platformele)
 	event.waitUntil(
 		self.registration.showNotification(data.title, {
 			body: data.body,
@@ -13,11 +29,11 @@ self.addEventListener("push", async (event) => {
 		})
 	);
 
-	// 2. Detectare PWA pentru sunet
+	// 3. Detectare PWA pentru sunet
 	const isPWA = self.matchMedia('(display-mode: standalone)').matches ||
 	              self.navigator.standalone === true;
 
-	// 3. Sunet doar pentru PWA
+	// 4. Sunet doar pentru PWA
 	if (isPWA) {
 		try {
 			// Redă sunet de notificare pentru PWA
@@ -30,18 +46,6 @@ self.addEventListener("push", async (event) => {
 			console.error('Audio setup failed:', error);
 		}
 	}
-
-	// 4. Trimite mesaj către tab activ pentru refresh instant
-	self.clients.matchAll({ type: "window", includeUncontrolled: true })
-		.then(clients => {
-			for (const client of clients) {
-				client.postMessage({
-					type: "NEW_MESSAGE",
-					conversationId: data.conversationId,
-					message: data
-				});
-			}
-		});
 });
 
 self.addEventListener("notificationclick", (event) => {

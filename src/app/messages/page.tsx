@@ -92,26 +92,30 @@ export default function MessagesPage() {
     }
   }, [selectedConversation, hasMoreMessages, loadingMore, nextBefore, loadMessages]);
 
-  // Handle new messages from Service Worker
+  // Handle new messages from Service Worker only (no polling)
   useEffect(() => {
     const handleNewMessage = (event: Event) => {
       const customEvent = event as CustomEvent;
       const { conversationId } = customEvent.detail;
 
-      console.log('📨 New message received for conversation:', conversationId);
+      console.log('📨 [Frontend] New message received for conversation:', conversationId);
 
       // Refresh conversations list for counters
       fetchConversations();
 
-      // If we're in the chat for this conversation, refresh messages
+      // If we're in the chat for this conversation, refresh messages immediately
       if (selectedConversation?._id === conversationId) {
+        console.log('🔄 [Frontend] Refreshing messages in current chat');
         loadMessages(conversationId);
       }
     };
 
     window.addEventListener('newMessage', handleNewMessage);
-    return () => window.removeEventListener('newMessage', handleNewMessage);
-  }, [selectedConversation?._id]); // Simplified dependencies
+
+    return () => {
+      window.removeEventListener('newMessage', handleNewMessage);
+    };
+  }, [selectedConversation?._id, loadMessages, fetchConversations]);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -161,13 +165,14 @@ export default function MessagesPage() {
   // Open chat modal and always fetch fresh messages
   useEffect(() => {
     if (selectedConversation) {
-      console.log('💬 Opening chat for conversation:', selectedConversation._id);
+      console.log('💬 [Frontend] Opening chat for conversation:', selectedConversation._id);
 
       // Load initial messages
       loadMessages(selectedConversation._id);
       setShowChatModal(true);
     } else {
       // Reset pagination state when closing chat
+      console.log('🔒 [Frontend] Closing chat');
       setCurrentMessages([]);
       setHasMoreMessages(false);
       setNextBefore(null);
