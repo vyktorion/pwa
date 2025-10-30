@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/nextauth';
 import {
   getMessagesByConversationId,
+  getMessagesByConversationIdPaginated,
   createMessage,
   markMessagesAsRead
 } from '@/services/message.service';
@@ -24,11 +25,19 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const conversationId = searchParams.get('conversationId');
-    console.log('💬 [GET /api/messages] Conversation ID:', conversationId);
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const before = searchParams.get('before');
+
+    console.log('💬 [GET /api/messages] Conversation ID:', conversationId, 'limit:', limit, 'before:', before);
 
     if (!conversationId) {
       console.log('⚠️ [GET /api/messages] Missing conversation ID');
       return NextResponse.json({ message: 'Conversation ID is required' }, { status: 400 });
+    }
+
+    // Validate limit
+    if (isNaN(limit) || limit < 1 || limit > 100) {
+      return NextResponse.json({ message: 'Limit must be between 1 and 100' }, { status: 400 });
     }
 
     // Check if user is participant in this conversation
@@ -47,16 +56,18 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('📝 [GET /api/messages] Fetching messages...');
-    const messages = await getMessagesByConversationId(conversationId);
-    console.log('✅ [GET /api/messages] Found messages:', messages.length);
+    const { messages, hasMore } = await getMessagesByConversationIdPaginated(conversationId, limit, before || undefined);
+    console.log('✅ [GET /api/messages] Found messages:', messages.length, 'hasMore:', hasMore);
 
-    console.log('👁️ [GET /api/messages] Marking messages as read...');
-    // Mark messages as read for this user
-    await markMessagesAsRead(conversationId, session.user.id);
-    console.log('✅ [GET /api/messages] Messages marked as read');
+    // Only mark messages as read if no 'before' parameter (first page load)
+    if (!before) {
+      console.log('👁️ [GET /api/messages] Marking messages as read...');
+      await markMessagesAsRead(conversationId, session.user.id);
+      console.log('✅ [GET /api/messages] Messages marked as read');
+    }
 
     console.log('🎉 [GET /api/messages] Success - returning messages');
-    return NextResponse.json(messages);
+    return NextResponse.json({ messages, hasMore, nextBefore: messages.length > 0 ? messages[0]._id : null });
   } catch (error) {
     console.error('❌ [GET /api/messages] Get messages error:', error);
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });

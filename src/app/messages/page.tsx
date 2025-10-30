@@ -26,7 +26,11 @@ export default function MessagesPage() {
   const [conversationToDelete, setConversationToDelete] = useState<Conversation | null>(null);
   const [showChatModal, setShowChatModal] = useState(false);
   const [currentMessages, setCurrentMessages] = useState<Message[]>([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [nextBefore, setNextBefore] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesStartRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const fetchConversations = useCallback(async () => {
@@ -51,20 +55,42 @@ export default function MessagesPage() {
     }
   }, [loading]); // Removed conversations.length to prevent excessive triggers
 
-  // Messages are now included in conversation data, no need for separate fetch
-
-  const refreshChat = useCallback(async (conversationId: string) => {
+  const loadMessages = useCallback(async (conversationId: string, before?: string, append = false) => {
     try {
-      const res = await fetch(`/api/messages?conversationId=${conversationId}`);
-      const messages = await res.json();
-      setCurrentMessages(messages);
+      const params = new URLSearchParams({ conversationId, limit: '50' });
+      if (before) params.set('before', before);
 
-      // Marchează ca citit
-      await fetch(`/api/conversations/${conversationId}/read`, { method: 'POST' });
+      const res = await fetch(`/api/messages?${params}`);
+      const data = await res.json();
+
+      if (append) {
+        setCurrentMessages(prev => [...data.messages, ...prev]);
+      } else {
+        setCurrentMessages(data.messages);
+      }
+
+      setHasMoreMessages(data.hasMore);
+      setNextBefore(data.nextBefore);
+
+      // Only mark as read on initial load, not when loading older messages
+      if (!append && !before) {
+        await fetch(`/api/conversations/${conversationId}/read`, { method: 'POST' });
+      }
     } catch (error) {
-      console.error('Refresh chat failed:', error);
+      console.error('Load messages failed:', error);
     }
   }, []);
+
+  const loadMoreMessages = useCallback(async () => {
+    if (!selectedConversation || !hasMoreMessages || loadingMore) return;
+
+    setLoadingMore(true);
+    try {
+      await loadMessages(selectedConversation._id, nextBefore || undefined, true);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [selectedConversation, hasMoreMessages, loadingMore, nextBefore, loadMessages]);
 
   // Handle new messages from Service Worker
   useEffect(() => {
@@ -79,7 +105,7 @@ export default function MessagesPage() {
 
       // If we're in the chat for this conversation, refresh messages
       if (selectedConversation?._id === conversationId) {
-        refreshChat(conversationId);
+        loadMessages(conversationId);
       }
     };
 
@@ -137,21 +163,16 @@ export default function MessagesPage() {
     if (selectedConversation) {
       console.log('💬 Opening chat for conversation:', selectedConversation._id);
 
-      // Always fetch fresh messages when opening chat
-      fetch(`/api/messages?conversationId=${selectedConversation._id}`)
-        .then(res => res.json())
-        .then(messages => {
-          console.log('📨 Fresh messages loaded:', messages.length);
-          setCurrentMessages(messages);
-        })
-        .catch(error => {
-          console.error('Error loading messages:', error);
-          setCurrentMessages([]);
-        });
-
+      // Load initial messages
+      loadMessages(selectedConversation._id);
       setShowChatModal(true);
+    } else {
+      // Reset pagination state when closing chat
+      setCurrentMessages([]);
+      setHasMoreMessages(false);
+      setNextBefore(null);
     }
-  }, [selectedConversation?._id]); // Only depend on conversation ID
+  }, [selectedConversation?._id, loadMessages]); // Include loadMessages dependency
 
   // Auto-scroll la ultimul mesaj DOAR la deschiderea modalului
   useEffect(() => {
@@ -191,8 +212,11 @@ export default function MessagesPage() {
         }),
       });
 
+      console.log('📤 Send message response status:', response.status);
+
       if (response.ok) {
         const message = await response.json();
+        console.log('✅ Message sent successfully:', message);
         setNewMessage('');
 
         toast({
@@ -219,6 +243,7 @@ export default function MessagesPage() {
         setCurrentMessages(prev => [...prev, message]);
       } else {
         const errorData = await response.json();
+        console.error('❌ Failed to send message:', errorData);
         toast({
           variant: "destructive",
           title: "Eroare",
@@ -226,7 +251,7 @@ export default function MessagesPage() {
         });
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('🚨 Error sending message:', error);
       toast({
         variant: "destructive",
         title: "Eroare",
@@ -280,6 +305,8 @@ export default function MessagesPage() {
     setShowChatModal(false);
     setSelectedConversation(null);
     setCurrentMessages([]);
+    setHasMoreMessages(false);
+    setNextBefore(null);
     setNewMessage('');
   };
 
@@ -421,6 +448,27 @@ export default function MessagesPage() {
           <div className="flex flex-col h-96">
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={messagesEndRef}>
+              {/* Load More Button */}
+              {hasMoreMessages && (
+                <div className="flex justify-center mb-4">
+                  <Button
+                    onClick={loadMoreMessages}
+                    disabled={loadingMore}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {loadingMore ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                        Se încarcă...
+                      </>
+                    ) : (
+                      'Încarcă mesaje mai vechi'
+                    )}
+                  </Button>
+                </div>
+              )}
+
               {(currentMessages.length === 0) ? (
                 <div className="flex flex-col items-center justify-center h-full text-center">
                   <MessageSquare className="w-16 h-16 text-muted-foreground mb-4" />

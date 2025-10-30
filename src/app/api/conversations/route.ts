@@ -6,7 +6,7 @@ import {
   createConversation,
   getConversationByParticipantsAndProperty
 } from '@/services/conversation.service';
-import { saleDbClient } from '@/lib/mongodb';
+import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
 export async function GET() {
@@ -37,10 +37,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Property ID and message are required' }, { status: 400 });
     }
 
-    // Get property details
-    const client = await saleDbClient;
-    const db = client.db();
-    const property = await db.collection('properties').findOne({ _id: new ObjectId(propertyId) });
+    // Get property details from sale database
+    const { saleDbClient } = await import('@/lib/mongodb');
+    const saleClient = await saleDbClient;
+    const saleDb = saleClient.db();
+    const property = await saleDb.collection('properties').findOne({ _id: new ObjectId(propertyId) });
     if (!property) {
       return NextResponse.json({ message: 'Property not found' }, { status: 404 });
     }

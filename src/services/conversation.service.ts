@@ -39,44 +39,49 @@ export async function getUserConversations(userId: string): Promise<Conversation
     .sort({ updatedAt: -1 })
     .toArray();
 
-  // Get all messages for each conversation (not just last message)
-  const conversationsWithMessages = await Promise.all(
+  // Optimize: Get only the last message and unread count, not all messages
+  const conversationsWithData = await Promise.all(
     conversations.map(async (conv) => {
-      const allMessages = await db
+      // Get only the last message
+      const lastMessage = await db
         .collection('messages')
         .find({ conversationId: conv._id.toString() })
-        .sort({ createdAt: 1 })
+        .sort({ createdAt: -1 })
+        .limit(1)
         .toArray();
 
-      const lastMessage = allMessages.length > 0 ? allMessages[allMessages.length - 1] : null;
+      // Count total messages
+      const messageCount = await db
+        .collection('messages')
+        .countDocuments({ conversationId: conv._id.toString() });
 
-      // Count unread messages for this user
+      // Count unread messages for this user (only from last 30 days for performance)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
       const unreadCount = await db
         .collection('messages')
         .countDocuments({
           conversationId: conv._id.toString(),
           senderId: { $ne: userId },
           read: false,
+          createdAt: { $gte: thirtyDaysAgo },
         });
 
       return {
         ...conv,
         _id: conv._id.toString(),
-        messages: allMessages.map(msg => ({
-          ...msg,
-          _id: msg._id.toString(),
-        })),
-        lastMessage: lastMessage ? {
-          ...lastMessage,
-          _id: lastMessage._id.toString(),
+        lastMessage: lastMessage.length > 0 ? {
+          ...lastMessage[0],
+          _id: lastMessage[0]._id.toString(),
         } : undefined,
         unreadCount,
-        messageCount: allMessages.length,
+        messageCount,
       };
     })
   );
 
-  return conversationsWithMessages as Conversation[];
+  return conversationsWithData as Conversation[];
 }
 
 export async function getConversationById(id: string): Promise<Conversation | null> {

@@ -34,37 +34,53 @@ export async function getMessagesByConversationId(conversationId: string): Promi
   const client = await clientPromise;
   const db = client.db('imo9');
 
-  // First check all messages in the database to debug
-  const allMessages = await db.collection('messages').find({}).limit(10).toArray();
-  console.log('📊 [getMessagesByConversationId] Sample of ALL messages in DB:', allMessages.map(m => ({ id: m._id, convId: m.conversationId, content: m.content?.substring(0, 30), sender: m.senderId })));
-
-  // Try both string and ObjectId queries to debug
-  console.log('🔍 [getMessagesByConversationId] Searching with string:', conversationId);
-  const messagesByString = await db
-    .collection('messages')
-    .find({ conversationId })
-    .sort({ createdAt: 1 })
-    .toArray();
-  console.log('💬 [getMessagesByConversationId] Messages found with string query:', messagesByString.length);
-
-  console.log('🔍 [getMessagesByConversationId] Searching with ObjectId:', conversationId);
-  const messagesByObjectId = await db
+  const messages = await db
     .collection('messages')
     .find({ conversationId: new ObjectId(conversationId) })
     .sort({ createdAt: 1 })
     .toArray();
-  console.log('💬 [getMessagesByConversationId] Messages found with ObjectId query:', messagesByObjectId.length);
 
-  // Use the one that finds messages
-  const messages = messagesByString.length > 0 ? messagesByString : messagesByObjectId;
-
-  console.log('💬 [getMessagesByConversationId] Final messages found:', messages.length);
-  console.log('💬 [getMessagesByConversationId] Messages content:', messages.map(m => ({ id: m._id, content: m.content, sender: m.senderId })));
+  console.log('💬 [getMessagesByConversationId] Messages found:', messages.length);
 
   return messages.map(msg => ({
     ...msg,
     _id: msg._id.toString(),
   })) as Message[];
+}
+
+export async function getMessagesByConversationIdPaginated(
+  conversationId: string,
+  limit: number = 50,
+  before?: string
+): Promise<{ messages: Message[]; hasMore: boolean }> {
+  console.log('🔍 [getMessagesByConversationIdPaginated] Looking for messages in conversation:', conversationId, 'limit:', limit, 'before:', before);
+  const client = await clientPromise;
+  const db = client.db('imo9');
+
+  let query: any = { conversationId: new ObjectId(conversationId) };
+  if (before) {
+    query._id = { $lt: new ObjectId(before) };
+  }
+
+  const messages = await db
+    .collection('messages')
+    .find(query)
+    .sort({ createdAt: -1 }) // Get newest first for pagination
+    .limit(limit + 1) // +1 to check if there are more
+    .toArray();
+
+  const hasMore = messages.length > limit;
+  const messagesToReturn = hasMore ? messages.slice(0, limit) : messages;
+
+  console.log('💬 [getMessagesByConversationIdPaginated] Messages found:', messagesToReturn.length, 'hasMore:', hasMore);
+
+  return {
+    messages: messagesToReturn.reverse().map(msg => ({ // Reverse back to chronological order
+      ...msg,
+      _id: msg._id.toString(),
+    })) as Message[],
+    hasMore
+  };
 }
 
 export async function getMessageById(id: string): Promise<Message | null> {
