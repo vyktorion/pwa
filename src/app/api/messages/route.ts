@@ -11,6 +11,7 @@ import { updateConversationLastMessage } from '@/services/conversation.service';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { sendPushNotification } from '@/lib/push';
+import { PushPayload } from '@/lib/push';
 
 export async function GET(request: NextRequest) {
   console.log('📨 [GET /api/messages] Received request');
@@ -118,55 +119,55 @@ export async function POST(request: NextRequest) {
     // Update conversation with last message
     await updateConversationLastMessage(conversationId, message);
     console.log('✅ [POST /api/messages] Conversation updated');
+// Send push notifications to other participants
+console.log('📱 [POST /api/messages] Sending push notifications to other participants...');
 
-    // Send real-time update via Service Worker events
-    try {
-      console.log('📡 [POST /api/messages] Triggering real-time updates...');
+// Get participants of this conversation (excluding sender)
+const conversationDoc = await db.collection('conversations').findOne({
+  _id: new ObjectId(conversationId)
+});
+const recipientIds = conversationDoc?.participants.filter((id: string) => id !== session.user.id) || [];
 
-      // Trigger Service Worker event to update all active clients
-      // This will dispatch the 'newMessage' event to all open tabs
-      console.log('✅ [POST /api/messages] Real-time update triggered via Service Worker');
+const pushSubscriptions = await db.collection('pushSubscriptions').find({
+  userId: { $in: recipientIds },
+  'subscription.endpoint': { $exists: true }
+}).toArray();
 
-      // Also try push notifications as backup
-      const conversation = await db.collection('conversations').findOne({
-        _id: new ObjectId(conversationId)
-      });
+    console.log(`📱 [POST /api/messages] Found ${pushSubscriptions.length} push subscriptions to notify`);
+    console.log('📱 [POST /api/messages] Recipients:', recipientIds);
+    console.log('📱 [POST /api/messages] Push subscriptions details:', pushSubscriptions.map(sub => ({
+      userId: sub.userId,
+      endpoint: sub.subscription?.endpoint?.substring(0, 50) + '...'
+    })));
 
-      if (conversation) {
-        // Find other participants (exclude sender)
-        const recipients = conversation.participants.filter(
-          (participantId: string) => participantId !== session.user.id
-        );
+    // Get sender info
+    const { getUserById } = await import('@/services/user.service');
+    const sender = await getUserById(session.user.id);
+    const senderName = sender?.name || 'Utilizator';
 
-        // Send push to each recipient
-        for (const recipientId of recipients) {
-          const recipient = await db.collection('users').findOne({
-            _id: new ObjectId(recipientId)
-          });
+    for (const pushSub of pushSubscriptions) {
+      try {
+        const payload = {
+          title: `Mesaj nou de la ${senderName}`,
+          body: content.length > 100 ? content.substring(0, 100) + '...' : content,
+          conversationId: conversationId,
+          senderId: session.user.id,
+          senderName: senderName,
+        };
 
-          console.log(`🔍 Checking push subscription for recipient ${recipientId}:`, !!recipient?.pushSubscription);
-
-          if (recipient?.pushSubscription) {
-            const payload = {
-              title: `Nou mesaj de la ${session.user.name || 'Utilizator'}`,
-              body: content.length > 50 ? content.substring(0, 50) + '...' : content,
-              conversationId,
-              senderId: session.user.id,
-              senderName: session.user.name || 'Utilizator'
-            };
-
-            console.log('📤 Sending push notification to:', recipientId, 'payload:', payload);
-            const result = await sendPushNotification(recipient.pushSubscription, payload);
-            console.log('📤 Push notification result:', result);
-          } else {
-            console.log('⚠️ No push subscription for recipient:', recipientId);
-          }
+        console.log(`📱 [POST /api/messages] Sending push to user ${pushSub.userId}...`);
+        const result = await sendPushNotification(pushSub.subscription, payload);
+        if (result.success) {
+          console.log(`✅ [POST /api/messages] Push notification sent to user ${pushSub.userId}`);
+        } else {
+          console.error(`❌ [POST /api/messages] Failed to send push to user ${pushSub.userId}:`, result.error?.message);
         }
+      } catch (error) {
+        console.error(`❌ [POST /api/messages] Error sending push to user ${pushSub.userId}:`, error);
       }
-    } catch (updateError) {
-      console.error('⚠️ Real-time update failed, but message was saved:', updateError);
-      // Don't fail the request if real-time update fails
     }
+
+    console.log('✅ [POST /api/messages] Message saved successfully');
 
     console.log('🎉 [POST /api/messages] Success - returning message');
     return NextResponse.json(message);

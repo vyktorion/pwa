@@ -1,72 +1,23 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Building, MessageSquare, User, Badge, Sun, Moon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from "next-themes";
 import { useSession } from 'next-auth/react';
+import { useNotificationsStore } from '@/stores/notifications.store';
 
 export function MobileNav() {
   const isMobile = useIsMobile();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
-  const [unreadCount, setUnreadCount] = useState(0);
-  const lastFetchRef = useRef<number>(0);
-  const cacheRef = useRef<{ count: number; timestamp: number } | null>(null);
+  const unreadCount = useNotificationsStore(state => state.unreadCount);
 
-  const fetchUnreadCount = useCallback(async (force = false) => {
-    const now = Date.now();
-    const CACHE_DURATION = 30000; // 30 seconds cache
-    const DEBOUNCE_DELAY = 2000; // 2 seconds debounce
-
-    // Check cache first
-    if (!force && cacheRef.current && (now - cacheRef.current.timestamp) < CACHE_DURATION) {
-      setUnreadCount(cacheRef.current.count);
-      return;
-    }
-
-    // Check debounce
-    if (!force && (now - lastFetchRef.current) < DEBOUNCE_DELAY) {
-      return;
-    }
-
-    lastFetchRef.current = now;
-
-    try {
-      const response = await fetch('/api/messages/unread');
-      if (response.ok) {
-        const data = await response.json();
-        const count = data.unreadCount;
-        setUnreadCount(count);
-        cacheRef.current = { count, timestamp: now };
-      }
-    } catch (error) {
-      console.error('Error fetching unread count:', error);
-    }
-  }, []);
-
-  useEffect(() => {
-    // Only fetch and listen when mobile AND user is authenticated
-    if (!isMobile || !session?.user) return;
-
-    fetchUnreadCount();
-
-    // Listen for messages events
-    const handleUpdate = () => {
-      fetchUnreadCount(true); // Force refresh when messages are viewed or new messages arrive
-    };
-
-    window.addEventListener('newMessage', handleUpdate);
-    window.addEventListener('messagesViewed', handleUpdate);
-
-    return () => {
-      window.removeEventListener('newMessage', handleUpdate);
-      window.removeEventListener('messagesViewed', handleUpdate);
-    };
-  }, [isMobile, session?.user, fetchUnreadCount]);
+  // Mobile nav uses the same global state as desktop nav
+  // No additional effects needed since Zustand handles reactivity
 
   // Only show on mobile devices
   if (!isMobile) {

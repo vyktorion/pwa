@@ -2,6 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
+import { useNotificationsStore } from '@/stores/notifications.store';
 
 console.log('📱 MessageHandler component loaded');
 
@@ -9,6 +10,8 @@ export default function MessageHandler() {
   console.log('🏗️ MessageHandler component rendering');
 
   const { data: session, status } = useSession();
+  const incrementUnreadCount = useNotificationsStore(state => state.incrementUnreadCount);
+  const setUnreadCount = useNotificationsStore(state => state.setUnreadCount);
   console.log('📊 Session hook data:', { status, hasSession: !!session, userId: session?.user?.id });
 
   // Helper functions
@@ -41,27 +44,49 @@ export default function MessageHandler() {
   // Setup message listener
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      console.log('📨 [MessageHandler] Received message from SW:', event.data);
+
       if (event.data?.type === "NEW_MESSAGE") {
+        console.log('📨 [MessageHandler] Processing NEW_MESSAGE event');
         handleNewMessage(event.data);
       } else if (event.data?.type === "OPEN_CONVERSATION") {
+        console.log('📨 [MessageHandler] Processing OPEN_CONVERSATION event');
         window.location.href = `/messages?conversation=${event.data.conversationId}`;
       }
     };
 
+    console.log('📨 [MessageHandler] Setting up service worker message listener');
     navigator.serviceWorker?.addEventListener("message", handleMessage);
 
     return () => {
+      console.log('📨 [MessageHandler] Removing service worker message listener');
       navigator.serviceWorker?.removeEventListener("message", handleMessage);
     };
   }, []);
 
-  // Unified useEffect - handles push notifications for authenticated users
+  // Unified useEffect - handles push notifications and initializes unread count for authenticated users
   useEffect(() => {
     if (!session?.user?.id || status !== 'authenticated') {
       return;
     }
 
-    console.log('🚀 Initializing push notifications for user:', session.user.id);
+    console.log('🚀 Initializing push notifications and unread count for user:', session.user.id);
+
+    // Initialize unread count from server
+    const initializeUnreadCount = async () => {
+      try {
+        const response = await fetch('/api/messages/unread');
+        if (response.ok) {
+          const data = await response.json();
+          setUnreadCount(data.unreadCount);
+          console.log('✅ Unread count initialized from server:', data.unreadCount);
+        }
+      } catch (error) {
+        console.error('❌ Error initializing unread count:', error);
+      }
+    };
+
+    initializeUnreadCount();
 
     const registerPush = async () => {
       try {
@@ -139,17 +164,14 @@ export default function MessageHandler() {
     };
   }, [session?.user?.id, status]);
 
-  const handleNewMessage = (data: { conversationId: string; message: unknown }) => {
-    // Dispatch global event pentru toate componentele
-    window.dispatchEvent(new CustomEvent('newMessage', {
-      detail: {
-        conversationId: data.conversationId,
-        message: data.message
-      }
-    }));
+  const handleNewMessage = (data: { conversationId: string; senderId: string }) => {
+    console.log('📨 [MessageHandler] Received new message:', data);
+    console.log('📨 [MessageHandler] Current unread count before increment:', useNotificationsStore.getState().unreadCount);
 
-    // Actualizează counters
-    window.dispatchEvent(new CustomEvent('messagesViewed'));
+    // Increment unread count in global state
+    incrementUnreadCount();
+
+    console.log('📨 [MessageHandler] Unread count after increment:', useNotificationsStore.getState().unreadCount);
   };
 
   return null; // Component invizibil

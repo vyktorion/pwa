@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { Plus, MessageSquare, User, LogIn } from 'lucide-react';
@@ -8,6 +8,8 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { ThemeToggle } from '../ui/theme-toggle';
 import { Session } from 'next-auth';
+import { useNotificationsStore } from '@/stores/notifications.store';
+import { usePathname } from 'next/navigation';
 
 interface NavbarProps {
   session?: Session | null;
@@ -15,47 +17,11 @@ interface NavbarProps {
 
 export default function Navbar({ session: serverSession }: NavbarProps) {
   const { data: session } = useSession();
+  const pathname = usePathname();
   const currentSession = session || serverSession;
-  const [unreadCount, setUnreadCount] = useState(0);
+  const unreadCount = useNotificationsStore(state => state.unreadCount);
 
-  const fetchUnreadCount = async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (!(currentSession?.user as any)?.id) return;
 
-    try {
-      // Check if user is currently on messages page
-      const isOnMessagesPage = window.location.pathname === '/messages';
-
-      const response = await fetch('/api/messages/unread');
-      if (response.ok) {
-        const data = await response.json();
-        // If user is on messages page, don't show navbar badge
-        setUnreadCount(isOnMessagesPage ? 0 : data.unreadCount);
-      }
-    } catch (error) {
-      console.error('Error fetching unread count:', error);
-    }
-  };
-
-  useEffect(() => {
-    if (currentSession?.user) {
-      // Fetch initial count
-      fetchUnreadCount();
-
-      // Listen for new messages events - update immediately
-      const handleNewMessage = () => {
-        fetchUnreadCount();
-      };
-
-      window.addEventListener('newMessage', handleNewMessage);
-      window.addEventListener('messagesViewed', handleNewMessage);
-
-      return () => {
-        window.removeEventListener('newMessage', handleNewMessage);
-        window.removeEventListener('messagesViewed', handleNewMessage);
-      };
-    }
-  }, [currentSession?.user]); // Fixed dependency
 
 
   return (
@@ -93,7 +59,7 @@ export default function Navbar({ session: serverSession }: NavbarProps) {
                 >
                   <MessageSquare className="h-4 w-4 group-hover:text-primary transition-colors" />
                   <span className="font-semibold">Mesaje</span>
-                  {unreadCount > 0 && (
+                  {unreadCount > 0 && pathname !== '/messages' && (
                     <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-600">
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </Badge>

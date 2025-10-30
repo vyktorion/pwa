@@ -56,22 +56,39 @@ export async function POST(request: NextRequest) {
     // Clean up expired subscriptions periodically (run in background)
     cleanupExpiredSubscriptions();
 
-    // Update user with push subscription
-    const result = await db.collection('users').updateOne(
-      { _id: new ObjectId(session.user.id) },
-      {
-        $set: {
-          pushSubscription: {
-            ...subscription,
-            registeredAt: new Date(),
-            lastUsed: new Date()
-          },
-          updatedAt: new Date()
-        }
-      }
-    );
+    // Check if user already has a push subscription in the separate collection
+    const existingSubscription = await db.collection('pushSubscriptions').findOne({
+      userId: session.user.id
+    });
 
-    if (result.matchedCount === 0) {
+    if (existingSubscription) {
+      // Update existing subscription
+      await db.collection('pushSubscriptions').updateOne(
+        { userId: session.user.id },
+        {
+          $set: {
+            subscription: subscription,
+            updatedAt: new Date(),
+            lastUsed: new Date()
+          }
+        }
+      );
+      console.log('✅ Updated existing push subscription for user:', session.user.id);
+    } else {
+      // Create new subscription
+      await db.collection('pushSubscriptions').insertOne({
+        userId: session.user.id,
+        subscription: subscription,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastUsed: new Date()
+      });
+      console.log('✅ Created new push subscription for user:', session.user.id);
+    }
+
+    // Check if user exists (for validation)
+    const userExists = await db.collection('users').findOne({ _id: new ObjectId(session.user.id) });
+    if (!userExists) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 });
     }
 

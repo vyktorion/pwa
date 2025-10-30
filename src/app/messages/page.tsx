@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Conversation, Message } from '@/types';
 import Image from 'next/image';
+import { useNotificationsStore } from '@/stores/notifications.store';
 
 export default function MessagesPage() {
   // Ref pentru auto-scroll la ultimul mesaj
@@ -32,6 +33,8 @@ export default function MessagesPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesStartRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const setUnreadCount = useNotificationsStore(state => state.setUnreadCount);
+  const resetUnreadCount = useNotificationsStore(state => state.resetUnreadCount);
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -47,13 +50,6 @@ export default function MessagesPage() {
     }
   }, []);
 
-  // Refresh navbar when conversations are loaded (only once)
-  useEffect(() => {
-    if (!loading && conversations.length >= 0) {
-      // Trigger navbar refresh by dispatching a custom event
-      window.dispatchEvent(new CustomEvent('messagesViewed'));
-    }
-  }, [loading]); // Removed conversations.length to prevent excessive triggers
 
   const loadMessages = useCallback(async (conversationId: string, before?: string, append = false) => {
     try {
@@ -132,6 +128,8 @@ export default function MessagesPage() {
     const handleFocus = () => {
       if (session?.user?.id) {
         fetchConversations();
+        // Reset notifications store when page is focused
+        resetUnreadCount();
       }
     };
 
@@ -154,8 +152,8 @@ export default function MessagesPage() {
               : conv
           )
         );
-        // Trigger navbar update
-        window.dispatchEvent(new CustomEvent('messagesViewed'));
+        // Reset notifications store
+        resetUnreadCount();
       }).catch(error => {
         console.error('Error marking conversation as read:', error);
       });

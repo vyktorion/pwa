@@ -1,51 +1,41 @@
-self.addEventListener("push", async (event) => {
-	const data = event.data.json();
+// Push notifications for navbar updates via Zustand
+// Service worker handles push events and forwards to main thread
 
-	console.log('📨 [SW] Received push notification:', data);
+self.addEventListener("push", (event) => {
+  console.log("📨 [SW] Push event received");
 
-	// 1. Trimite mesaj către TOATE tab-urile active pentru real-time update
-	await self.clients.matchAll({ type: "window", includeUncontrolled: true })
-		.then(clients => {
-			console.log('👥 [SW] Found active clients:', clients.length);
-			for (const client of clients) {
-				console.log('📤 [SW] Sending NEW_MESSAGE to client:', client.id);
-				client.postMessage({
-					type: "NEW_MESSAGE",
-					conversationId: data.conversationId,
-					message: data
-				});
-			}
-		});
+  if (event.data) {
+    const data = event.data.json();
+    console.log("📨 [SW] Push data:", data);
 
-	// 2. Notificare vizuală (toate platformele)
-	event.waitUntil(
-		self.registration.showNotification(data.title, {
-			body: data.body,
-			icon: "/icon512_rounded.png",
-			vibrate: [200, 100, 200],
-			data: { conversationId: data.conversationId },
-			requireInteraction: true,
-			badge: "/icon512_maskable.png"
-		})
-	);
+    // Forward the message to the main thread for Zustand state update
+    self.clients.matchAll().then((clients) => {
+      console.log(`📨 [SW] Found ${clients.length} clients to notify`);
 
-	// 3. Detectare PWA pentru sunet
-	const isPWA = self.matchMedia('(display-mode: standalone)').matches ||
-	              self.navigator.standalone === true;
+      clients.forEach((client) => {
+        console.log(`📨 [SW] Sending NEW_MESSAGE to client:`, client.url);
+        client.postMessage({
+          type: "NEW_MESSAGE",
+          conversationId: data.conversationId,
+          senderId: data.senderId,
+        });
+      });
+    });
 
-	// 4. Sunet doar pentru PWA
-	if (isPWA) {
-		try {
-			// Redă sunet de notificare pentru PWA
-			const audio = new Audio('/ping.mp3');
-			audio.volume = 0.7; // Volum moderat
-			audio.play().catch(error => {
-				console.error('Audio playback failed:', error);
-			});
-		} catch (error) {
-			console.error('Audio setup failed:', error);
-		}
-	}
+    // Show notification
+    event.waitUntil(
+      self.registration.showNotification(data.title, {
+        body: data.body,
+        icon: "/icon512_rounded.png",
+        badge: "/icon512_maskable.png",
+        data: { conversationId: data.conversationId },
+        requireInteraction: true,
+        vibrate: [200, 100, 200],
+      })
+    );
+  } else {
+    console.log("📨 [SW] No data in push event");
+  }
 });
 
 self.addEventListener("notificationclick", (event) => {
