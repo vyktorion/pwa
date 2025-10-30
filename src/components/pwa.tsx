@@ -1,14 +1,7 @@
 "use client";
-import React, { useEffect } from "react";
+import React from "react";
 
+// Service Worker removed - simple badge updates don't need it
 export default function Pwa() {
-	useEffect(() => {
-		if ("serviceWorker" in navigator) {
-			window.addEventListener("load", async function () {
-				await navigator.serviceWorker.register("/sw.js");
-			});
-		}
-	}, []);
-
 	return <></>;
 }

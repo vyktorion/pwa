@@ -1,23 +1,77 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Building, MessageSquare, User, Badge, Sun, Moon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from "next-themes";
 import { useSession } from 'next-auth/react';
-import { useNotificationsStore } from '@/stores/notifications.store';
 
 export function MobileNav() {
   const isMobile = useIsMobile();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
-  const unreadCount = useNotificationsStore(state => state.unreadCount);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  // Mobile nav uses the same global state as desktop nav
-  // No additional effects needed since Zustand handles reactivity
+  // Fetch unread count on mount and when session changes
+  useEffect(() => {
+    if (session?.user?.id) {
+      const fetchUnreadCount = async () => {
+        try {
+          const response = await fetch('/api/messages/unread');
+          if (response.ok) {
+            const data = await response.json();
+            setUnreadCount(data.unreadCount);
+          }
+        } catch (error) {
+          console.error('Error fetching unread count:', error);
+        }
+      };
+
+      fetchUnreadCount();
+
+      // Fetch on tab focus/visibility change
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          fetchUnreadCount();
+        }
+      };
+
+      const handleFocus = () => {
+        fetchUnreadCount();
+      };
+
+      // Listen for messages page refresh trigger
+      const handleMessagesRefresh = () => {
+        fetchUnreadCount();
+      };
+
+      // Additional mobile-specific events
+      const handleTouchStart = () => {
+        fetchUnreadCount();
+      };
+
+      const handleOrientationChange = () => {
+        fetchUnreadCount();
+      };
+
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      window.addEventListener('focus', handleFocus);
+      window.addEventListener('navbar-refresh-unread', handleMessagesRefresh);
+      window.addEventListener('touchstart', handleTouchStart);
+      window.addEventListener('orientationchange', handleOrientationChange);
+
+      return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('focus', handleFocus);
+        window.removeEventListener('navbar-refresh-unread', handleMessagesRefresh);
+        window.removeEventListener('touchstart', handleTouchStart);
+        window.removeEventListener('orientationchange', handleOrientationChange);
+      };
+    }
+  }, [session?.user?.id]);
 
   // Only show on mobile devices
   if (!isMobile) {
@@ -95,9 +149,9 @@ export function MobileNav() {
                   className={`w-5 h-5 ${item.active ? 'text-primary' : ''}`}
                 />
                 {item.badge && (
-                  <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-600">
+                  <span className="absolute -top-1 -right-1 h-6 w-6 flex items-center justify-center text-xs font-bold text-white bg-red-500 rounded-full border border-white shadow-sm">
                     {item.badge > 99 ? '99+' : item.badge}
-                  </Badge>
+                  </span>
                 )}
               </div>
               <span className={`text-xs mt-1 font-medium ${

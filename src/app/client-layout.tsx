@@ -7,7 +7,6 @@ import { Toaster } from '@/components/ui/sonner';
 import InstallPrompt from '@/components/InstallPrompt';
 import Pwa from '@/components/pwa';
 import { MobileNav } from '@/components/ui/mobile-nav';
-import MessageHandler from '@/components/MessageHandler';
 import { Session } from 'next-auth';
 import { useEffect, useState } from 'react';
 
@@ -22,19 +21,7 @@ export default function ClientLayout({
 }: ClientLayoutProps) {
   const [isMobile, setIsMobile] = useState(false);
 
-  // Register Service Worker
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/sw.js')
-        .then((registration) => {
-          console.log('SW registered:', registration);
-        })
-        .catch((error) => {
-          console.log('SW registration failed:', error);
-        });
-    }
-  }, []);
+  // Removed Service Worker registration - no longer needed for simple badge updates
 
   // Detect mobile device
   useEffect(() => {
@@ -61,7 +48,6 @@ export default function ClientLayout({
           <Toaster />
           <InstallPrompt />
           <Pwa />
-          <MessageHandler />
           {showBottomNav && <MobileNav />}
         </div>
       </SessionProvider>

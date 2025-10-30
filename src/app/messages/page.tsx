@@ -11,11 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Conversation, Message } from '@/types';
 import Image from 'next/image';
-import { useNotificationsStore } from '@/stores/notifications.store';
 
 export default function MessagesPage() {
-  // Ref pentru auto-scroll la ultimul mesaj
-  const scrollRef = useRef<HTMLDivElement>(null);
   const { data: session, status } = useSession();
   const router = useRouter();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -31,10 +28,7 @@ export default function MessagesPage() {
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [nextBefore, setNextBefore] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesStartRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const setUnreadCount = useNotificationsStore(state => state.setUnreadCount);
-  const resetUnreadCount = useNotificationsStore(state => state.resetUnreadCount);
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -88,30 +82,7 @@ export default function MessagesPage() {
     }
   }, [selectedConversation, hasMoreMessages, loadingMore, nextBefore, loadMessages]);
 
-  // Handle new messages from Service Worker only (no polling)
-  useEffect(() => {
-    const handleNewMessage = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const { conversationId } = customEvent.detail;
-
-      console.log('📨 [Frontend] New message received for conversation:', conversationId);
-
-      // Refresh conversations list for counters
-      fetchConversations();
-
-      // If we're in the chat for this conversation, refresh messages immediately
-      if (selectedConversation?._id === conversationId) {
-        console.log('🔄 [Frontend] Refreshing messages in current chat');
-        loadMessages(conversationId);
-      }
-    };
-
-    window.addEventListener('newMessage', handleNewMessage);
-
-    return () => {
-      window.removeEventListener('newMessage', handleNewMessage);
-    };
-  }, [selectedConversation?._id, loadMessages, fetchConversations]);
+  // Service Worker removed - no push notifications needed for simple badge updates
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -128,8 +99,7 @@ export default function MessagesPage() {
     const handleFocus = () => {
       if (session?.user?.id) {
         fetchConversations();
-        // Reset notifications store when page is focused
-        resetUnreadCount();
+        // No longer need to reset global store - Navbar will re-fetch on next focus
       }
     };
 
@@ -152,8 +122,10 @@ export default function MessagesPage() {
               : conv
           )
         );
-        // Reset notifications store
-        resetUnreadCount();
+
+        // Trigger Navbar to re-fetch unread count immediately
+        const navbarEvent = new CustomEvent('navbar-refresh-unread');
+        window.dispatchEvent(navbarEvent);
       }).catch(error => {
         console.error('Error marking conversation as read:', error);
       });
@@ -177,16 +149,6 @@ export default function MessagesPage() {
     }
   }, [selectedConversation?._id, loadMessages]); // Include loadMessages dependency
 
-  // Auto-scroll la ultimul mesaj DOAR la deschiderea modalului
-  useEffect(() => {
-    if (showChatModal) {
-      setTimeout(() => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
-    }
-  }, [showChatModal]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -521,7 +483,6 @@ export default function MessagesPage() {
                       </div>
                     </div>
                   ))}
-                  <div ref={scrollRef} />
                 </>
               )}
             </div>

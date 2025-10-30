@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { Plus, MessageSquare, User, LogIn } from 'lucide-react';
@@ -8,7 +8,6 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { ThemeToggle } from '../ui/theme-toggle';
 import { Session } from 'next-auth';
-import { useNotificationsStore } from '@/stores/notifications.store';
 import { usePathname } from 'next/navigation';
 
 interface NavbarProps {
@@ -19,7 +18,52 @@ export default function Navbar({ session: serverSession }: NavbarProps) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const currentSession = session || serverSession;
-  const unreadCount = useNotificationsStore(state => state.unreadCount);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Fetch unread count on mount and when session changes
+  useEffect(() => {
+    if (currentSession?.user?.id) {
+      const fetchUnreadCount = async () => {
+        try {
+          const response = await fetch('/api/messages/unread');
+          if (response.ok) {
+            const data = await response.json();
+            setUnreadCount(data.unreadCount);
+          }
+        } catch (error) {
+          console.error('Error fetching unread count:', error);
+        }
+      };
+
+      fetchUnreadCount();
+
+      // Fetch on tab focus/visibility change
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          fetchUnreadCount();
+        }
+      };
+
+      const handleFocus = () => {
+        fetchUnreadCount();
+      };
+
+      // Listen for messages page refresh trigger
+      const handleMessagesRefresh = () => {
+        fetchUnreadCount();
+      };
+
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      window.addEventListener('focus', handleFocus);
+      window.addEventListener('navbar-refresh-unread', handleMessagesRefresh);
+
+      return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('focus', handleFocus);
+        window.removeEventListener('navbar-refresh-unread', handleMessagesRefresh);
+      };
+    }
+  }, [currentSession?.user?.id]);
 
 
 
@@ -60,7 +104,7 @@ export default function Navbar({ session: serverSession }: NavbarProps) {
                   <MessageSquare className="h-4 w-4 group-hover:text-primary transition-colors" />
                   <span className="font-semibold">Mesaje</span>
                   {unreadCount > 0 && pathname !== '/messages' && (
-                    <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-600">
+                    <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-600 rounded-xl">
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </Badge>
                   )}

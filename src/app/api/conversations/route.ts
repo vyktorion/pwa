@@ -6,7 +6,6 @@ import {
   createConversation,
   getConversationByParticipantsAndProperty
 } from '@/services/conversation.service';
-import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
 export async function GET() {
@@ -77,45 +76,7 @@ export async function POST(request: NextRequest) {
     // Update conversation with last message
     await updateConversationLastMessage(conversation._id, newMessage);
 
-    // Send push notification to recipient
-    const { sendPushNotification } = await import('@/lib/push');
-    const pushDb = await clientPromise;
-    const db = pushDb.db('imo9');
-    const pushSubscriptions = await db.collection('pushSubscriptions').find({
-      userId: property.userId,
-      'subscription.endpoint': { $exists: true }
-    }).toArray();
-
-    console.log(`📱 [POST /api/conversations] Found ${pushSubscriptions.length} push subscriptions for new conversation`);
-
-    if (pushSubscriptions.length > 0) {
-      // Get sender info
-      const { getUserById } = await import('@/services/user.service');
-      const sender = await getUserById(session.user.id);
-      const senderName = sender?.name || 'Utilizator';
-
-      for (const pushSub of pushSubscriptions) {
-        try {
-          const payload = {
-            title: `Conversație nouă cu ${senderName}`,
-            body: message.length > 100 ? message.substring(0, 100) + '...' : message,
-            conversationId: conversation._id.toString(),
-            senderId: session.user.id,
-            senderName: senderName,
-          };
-
-          console.log(`📱 [POST /api/conversations] Sending first message push to user ${pushSub.userId}...`);
-          const result = await sendPushNotification(pushSub.subscription, payload);
-          if (result.success) {
-            console.log(`✅ [POST /api/conversations] Push notification sent to user ${pushSub.userId}`);
-          } else {
-            console.error(`❌ [POST /api/conversations] Failed to send push to user ${pushSub.userId}:`, result.error?.message);
-          }
-        } catch (error) {
-          console.error(`❌ [POST /api/conversations] Error sending push to user ${pushSub.userId}:`, error);
-        }
-      }
-    }
+     // Push notifications removed - using simple badge updates instead
 
     console.log('🎉 [POST /api/conversations] Success - returning conversation and message');
     return NextResponse.json({
