@@ -143,74 +143,12 @@ export default function Navbar({ session: serverSession }: NavbarProps) {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center space-x-2">
+          {/* Mobile: Always show theme toggle */}
+          <div className="md:hidden">
             <ThemeToggle />
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              aria-label="Toggle mobile menu"
-            >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden border-t border-border/50 bg-background/95 backdrop-blur-xl shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
-            <div className="px-4 pt-4 pb-6 space-y-3">
-              {currentSession ? (
-                <>
-                  <Link
-                    href="/messages"
-                    className="relative flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold text-muted-foreground hover:text-foreground hover:bg-accent/80 transition-all duration-200 group"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <MessageSquare className="h-5 w-5 group-hover:text-primary transition-colors" />
-                    <span>Mesaje</span>
-                    {unreadCount > 0 && (
-                      <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-600">
-                        {unreadCount > 99 ? '99+' : unreadCount}
-                      </Badge>
-                    )}
-                  </Link>
-                  <Link
-                    href="/profile"
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold text-muted-foreground hover:text-foreground hover:bg-accent/80 transition-all duration-200 group"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <User className="h-5 w-5 group-hover:text-primary transition-colors" />
-                    <span>Profil</span>
-                  </Link>
-                  <button
-                    onClick={() => {
-                      handleSignOut();
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-base font-semibold text-destructive hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
-                  >
-                    <LogOut className="h-5 w-5" />
-                    <span>Deconectare</span>
-                  </button>
-                </>
-              ) : (
-                <div className="space-y-3">
-                  <Button asChild variant="ghost" className="w-full justify-center text-center h-11 rounded-xl font-semibold hover:bg-accent/80">
-                    <Link href="/login" onClick={() => setIsMenuOpen(false)}>
-                      Autentificare
-                    </Link>
-                  </Button>
-                  <Button asChild className="w-full justify-center text-center h-11 rounded-xl font-semibold shadow-lg">
-                    <Link href="/register" onClick={() => setIsMenuOpen(false)}>
-                      Înregistrează-te
-                    </Link>
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </nav>
   );

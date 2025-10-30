@@ -7,12 +7,14 @@ import { Home, Building, MessageSquare, User, Badge, Sun, Moon } from 'lucide-re
 import { usePWA } from '@/hooks/use-pwa';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from "next-themes";
+import { useSession } from 'next-auth/react';
 
 export function MobileNav() {
   const isPWA = usePWA();
   const isMobile = useIsMobile();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  const { data: session } = useSession();
   const [unreadCount, setUnreadCount] = useState(0);
   const lastFetchRef = useRef<number>(0);
   const cacheRef = useRef<{ count: number; timestamp: number } | null>(null);
@@ -49,8 +51,8 @@ export function MobileNav() {
   }, []);
 
   useEffect(() => {
-    // Only fetch and listen when mobile
-    if (!isMobile) return;
+    // Only fetch and listen when mobile AND user is authenticated
+    if (!isMobile || !session?.user) return;
 
     fetchUnreadCount();
 
@@ -64,7 +66,7 @@ export function MobileNav() {
     return () => {
       window.removeEventListener('messagesViewed', handleMessagesViewed);
     };
-  }, [isMobile, fetchUnreadCount]);
+  }, [isMobile, session?.user, fetchUnreadCount]);
 
   // Only show on mobile devices
   if (!isMobile) {
@@ -96,7 +98,7 @@ export function MobileNav() {
       icon: MessageSquare,
       label: 'Mesaje',
       active: pathname === '/messages',
-      badge: unreadCount > 0 ? unreadCount : null,
+      badge: (session?.user && unreadCount > 0) ? unreadCount : null,
     },
     {
       href: '/profile',
