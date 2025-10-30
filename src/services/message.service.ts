@@ -62,7 +62,7 @@ export async function getMessagesByConversationIdPaginated(
   const client = await clientPromise;
   const db = client.db('imo9');
 
-  let query: any = { conversationId: new ObjectId(conversationId) };
+  const query: Record<string, any> = { conversationId: new ObjectId(conversationId) };
   if (before) {
     query._id = { $lt: new ObjectId(before) };
   }
