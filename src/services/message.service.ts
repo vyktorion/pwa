@@ -114,12 +114,13 @@ export async function markMessageAsRead(id: string): Promise<void> {
 }
 
 export async function markMessagesAsRead(conversationId: string, userId: string): Promise<void> {
+  console.log('👁️ [markMessagesAsRead] Marking messages as read for conversation:', conversationId, 'user:', userId);
   const client = await clientPromise;
   const db = client.db('imo9');
 
-  await db.collection('messages').updateMany(
+  const result = await db.collection('messages').updateMany(
     {
-      conversationId,
+      conversationId: new ObjectId(conversationId), // Use ObjectId for consistency
       senderId: { $ne: userId },
       read: false,
     },
@@ -127,6 +128,8 @@ export async function markMessagesAsRead(conversationId: string, userId: string)
       $set: { read: true },
     }
   );
+
+  console.log('✅ [markMessagesAsRead] Updated', result.modifiedCount, 'messages as read');
 }
 
 export async function deleteMessage(id: string): Promise<boolean> {
