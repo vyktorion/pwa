@@ -8,19 +8,24 @@ export async function createMessage(
   content: string
 ): Promise<Message> {
   console.log('💬 [createMessage] Creating message for conversation:', conversationId, 'from user:', senderId);
+  console.log('💬 [createMessage] Content length:', content.length, 'Content preview:', content.substring(0, 50));
+
   const client = await clientPromise;
   const db = client.db('imo9');
 
   const message: Omit<Message, '_id'> = {
-    conversationId,
+    conversationId: new ObjectId(conversationId).toString(), // Ensure string format
     senderId,
     content,
     read: false,
     createdAt: new Date(),
   };
 
-  console.log('📝 [createMessage] Message data:', message);
-  const result = await db.collection('messages').insertOne(message);
+  console.log('📝 [createMessage] Final message data:', message);
+  const result = await db.collection('messages').insertOne({
+    ...message,
+    conversationId: new ObjectId(conversationId), // Store as ObjectId in DB
+  });
   console.log('✅ [createMessage] Message inserted with ID:', result.insertedId);
 
   return {

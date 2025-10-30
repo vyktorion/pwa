@@ -75,36 +75,49 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  console.log('🚀 [POST /api/messages] Starting message creation...');
   try {
     const session = await getServerSession(authOptions);
+    console.log('👤 [POST /api/messages] Session user:', session?.user?.id);
+
     if (!session?.user?.id) {
+      console.log('🚫 [POST /api/messages] Unauthorized - no session user');
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
     const { conversationId, content } = body;
+    console.log('📝 [POST /api/messages] Request body:', { conversationId, content: content?.substring(0, 50) });
 
     if (!conversationId || !content) {
+      console.log('⚠️ [POST /api/messages] Missing required fields');
       return NextResponse.json({ message: 'Conversation ID and content are required' }, { status: 400 });
     }
 
     // Check if user is participant in this conversation
     const client = await clientPromise;
     const db = client.db('imo9');
+    console.log('🔍 [POST /api/messages] Checking conversation access for:', conversationId);
     const conversation = await db.collection('conversations').findOne({
       _id: new ObjectId(conversationId),
       participants: session.user.id
     });
+    console.log('💬 [POST /api/messages] Conversation found:', !!conversation);
 
     if (!conversation) {
+      console.log('🚫 [POST /api/messages] Conversation not found or access denied');
       return NextResponse.json({ message: 'Conversation not found or access denied' }, { status: 404 });
     }
 
+    console.log('✅ [POST /api/messages] Access verified, creating message...');
     // Create message
     const message = await createMessage(conversationId, session.user.id, content);
+    console.log('✅ [POST /api/messages] Message created:', message._id);
 
+    console.log('🔄 [POST /api/messages] Updating conversation last message...');
     // Update conversation with last message
     await updateConversationLastMessage(conversationId, message);
+    console.log('✅ [POST /api/messages] Conversation updated');
 
     // Send push notification to other participants
     try {
