@@ -49,12 +49,9 @@ export default function ClientLayout({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Show navbar only when:
-  // - Desktop: always
-  // - Mobile browser: yes, hide bottom nav
-  // - Mobile PWA: no, show bottom nav instead
-  const showNavbar = !isMobile || (isMobile && !isPWA);
-  const showBottomNav = isMobile && isPWA;
+  // Show navbar on all devices
+  const showNavbar = true;
+  const showBottomNav = isMobile;
 
   return (
     <ThemeProvider>

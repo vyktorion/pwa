@@ -49,8 +49,8 @@ export function MobileNav() {
   }, []);
 
   useEffect(() => {
-    // Only fetch and listen when mobile AND PWA
-    if (!isMobile || !isPWA) return;
+    // Only fetch and listen when mobile
+    if (!isMobile) return;
 
     fetchUnreadCount();
 
@@ -64,10 +64,10 @@ export function MobileNav() {
     return () => {
       window.removeEventListener('messagesViewed', handleMessagesViewed);
     };
-  }, [isMobile, isPWA, fetchUnreadCount]);
+  }, [isMobile, fetchUnreadCount]);
 
-  // Only show on mobile PWA
-  if (!isMobile || !isPWA) {
+  // Only show on mobile devices
+  if (!isMobile) {
     return null;
   }
 

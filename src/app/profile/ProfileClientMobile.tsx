@@ -236,7 +236,7 @@ const ProfileClientMobile = React.memo(function ProfileClientMobile({ user, user
 
   return (
     <div className="min-h-screen bg-linear-to-br from-background via-background to-muted/20 md:hidden">
-      <div className="px-4 py-6 h-screen overflow-y-auto scrollbar-hide">
+      <div className="px-4 py-6 min-h-screen">
         {/* Profile Header Card - Mobile Optimized */}
         <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden mb-6">
           <div className="bg-linear-to-r from-primary/10 to-primary/5 px-4 py-6">
