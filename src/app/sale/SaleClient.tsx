@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { PropertyService } from "@/services/property.service";
 import { Property } from "@/types";
 import SaleClientDesktop from "./SaleClientDesktop";
 import SaleClientMobile from "./SaleClientMobile";
@@ -12,6 +13,9 @@ interface SaleClientProps {
 export default function SaleClient({ initialProperties }: SaleClientProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
+  const [properties, setProperties] = useState<Property[]>(initialProperties || []);
+  const [, setLoading] = useState(false);
+  const [currentPage] = useState(1);
   // Detect device type for default view mode
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
     if (typeof window !== 'undefined') {
@@ -20,10 +24,50 @@ export default function SaleClient({ initialProperties }: SaleClientProps) {
     return 'list';
   });
 
-  const properties = initialProperties || [];
+  // Funcție pentru căutare și sortare - optimizată pentru instant search
+  const handleSearch = useCallback(async (isInitialLoad = false) => {
+    if (!isInitialLoad) {
+      setLoading(true);
+    }
 
-  // React Query automatically handles refetching when query keys change
-  // No need for manual useEffect anymore
+    try {
+      const params: {
+        q?: string;
+        page?: number;
+        limit?: number;
+        sortBy?: string;
+      } = {
+        page: currentPage,
+        limit: 20,
+        sortBy
+      };
+
+      // Filtru text
+      if (searchQuery.trim()) {
+        params.q = searchQuery.trim();
+      }
+
+      const result = await PropertyService.searchProperties(params);
+
+      // Folosește proprietățile direct din API - sortarea se face în DB
+      setProperties(result.properties);
+
+    } catch (error) {
+      console.error('❌ HomeClient: Error searching properties:', error);
+      alert('Eroare la încărcarea proprietăților. Încercați din nou.');
+    } finally {
+      setLoading(false);
+    }
+  }, [searchQuery, currentPage, sortBy]);
+
+  // Efect pentru căutare când filtrele se schimbă - instant search pentru text, debounce pentru alte filtre
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      handleSearch();
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [handleSearch]);
 
 
   return (

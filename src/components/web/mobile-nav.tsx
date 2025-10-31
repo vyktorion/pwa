@@ -3,12 +3,19 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Building, MessageSquare, User, Badge, Sun, Moon } from 'lucide-react';
+import { Home, Building, MessageSquare, User, Badge, Sun, Moon, SquarePlus } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from "next-themes";
 import { useSession } from 'next-auth/react';
-import { useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+
+type NavItem = {
+  href: string;
+  icon?: React.ComponentType<any>;
+  label: string;
+  active?: boolean;
+  badge?: number | null;
+  action?: () => void;
+};
 
 export function MobileNav() {
   const isMobile = useIsMobile();
@@ -16,30 +23,88 @@ export function MobileNav() {
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
 
-  const navItems = [
+  // Fetch unread count on mount and when session changes
+  useEffect(() => {
+    if (session?.user?.id) {
+      const fetchUnreadCount = async () => {
+        try {
+          const response = await fetch('/api/messages/unread');
+          if (response.ok) {
+            const data = await response.json();
+            setUnreadCount(data.unreadCount);
+          }
+        } catch (error) {
+          console.error('Error fetching unread count:', error);
+        }
+      };
+
+      fetchUnreadCount();
+
+      // Fetch on tab focus/visibility change
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          fetchUnreadCount();
+        }
+      };
+
+      const handleFocus = () => {
+        fetchUnreadCount();
+      };
+
+      // Listen for messages page refresh trigger
+      const handleMessagesRefresh = () => {
+        fetchUnreadCount();
+      };
+
+      // Additional mobile-specific events
+      const handleTouchStart = () => {
+        fetchUnreadCount();
+      };
+
+      const handleOrientationChange = () => {
+        fetchUnreadCount();
+      };
+
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      window.addEventListener('focus', handleFocus);
+      window.addEventListener('navbar-refresh-unread', handleMessagesRefresh);
+      window.addEventListener('touchstart', handleTouchStart);
+      window.addEventListener('orientationchange', handleOrientationChange);
+
+      return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('focus', handleFocus);
+        window.removeEventListener('navbar-refresh-unread', handleMessagesRefresh);
+        window.removeEventListener('touchstart', handleTouchStart);
+        window.removeEventListener('orientationchange', handleOrientationChange);
+      };
+    }
+  }, [session?.user?.id]);
+
+  // Only show on mobile devices
+  if (!isMobile) {
+    return null;
+  }
+
+  const navItems: NavItem[] = [
     {
       href: '/',
       icon: Home,
       label: 'Acasă',
       active: pathname === '/',
-      prefetch: false, // Dezactivăm prefetch pentru răspuns instant
     },
     {
       href: '/sale',
       icon: Building,
-      label: 'Listare',
-      active: pathname === '/sale' || pathname.startsWith('/sale/'),
-      prefetch: false,
+      label: 'Listate',
+      active: pathname === '/sale' || (pathname.startsWith('/sale/') && !pathname.startsWith('/sale/post')),
     },
     {
-      href: '/theme',
-      icon: theme === 'dark' ? Moon : Sun,
-      label: 'Theme',
-      active: false,
-      action: () => setTheme(theme === 'dark' ? 'light' : 'dark'),
+      href: '/sale/post',
+      icon: SquarePlus,
+      label: 'Adauga',
+      active: pathname === '/sale/post',
     },
     {
       href: '/messages',
@@ -47,30 +112,28 @@ export function MobileNav() {
       label: 'Mesaje',
       active: pathname === '/messages',
       badge: (session?.user && unreadCount > 0) ? unreadCount : null,
-      prefetch: false,
     },
     {
       href: '/profile',
       icon: User,
       label: 'Profil',
       active: pathname === '/profile',
-      prefetch: false,
     },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border shadow-lg" style={{ touchAction: 'manipulation' }}>
-      <div className="flex items-center justify-around px-1 py-1" style={{ contain: 'layout style' }}>
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border shadow-lg">
+      <div className="flex items-center justify-around px-1 py-1">
         {navItems.map((item) => {
           if (item.action) {
             return (
               <button
                 key={item.href}
                 onClick={item.action}
-                className="flex flex-col items-center justify-center px-2 py-2 transition-colors duration-75 min-w-0 flex-1 text-muted-foreground hover:text-foreground hover:bg-accent/50 touch-manipulation active:bg-accent"
+                className="flex flex-col items-center justify-center px-2 py-2 transition-colors duration-150 min-w-0 flex-1 text-muted-foreground hover:text-foreground hover:bg-accent/50 touch-manipulation"
               >
                 <div className="relative">
-                  <item.icon className="w-5 h-5" />
+                  {item.icon && <item.icon className="w-5 h-5" />}
                 </div>
                 <span className="text-xs mt-1 font-medium">
                   {item.label}
@@ -80,22 +143,21 @@ export function MobileNav() {
           }
 
           return (
-            <button
+            <Link
               key={item.href}
-              className={`tap-btn flex flex-col items-center justify-center px-2 py-2 min-w-0 flex-1 ${
+              href={item.href}
+              className={`flex flex-col items-center justify-center px-2 py-2 transition-colors duration-150 min-w-0 flex-1 touch-manipulation ${
                 item.active
                   ? 'text-primary'
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                } ${isPending && item.active ? 'opacity-60' : ''}`}
-              onClick={() => {
-                // Feedback vizual instant (< 16ms) cu useTransition
-                startTransition(() => router.push(item.href));
-              }}
+              }`}
             >
               <div className="relative">
-                <item.icon
-                  className={`w-5 h-5 ${item.active ? 'text-primary' : ''}`}
-                />
+                {item.icon && (
+                  <item.icon
+                    className={`w-5 h-5 ${item.active ? 'text-primary' : ''}`}
+                  />
+                )}
                 {item.badge && (
                   <span className="absolute -top-1 -right-1 h-6 w-6 flex items-center justify-center text-xs font-bold text-white bg-red-500 rounded-full border border-white shadow-sm">
                     {item.badge > 99 ? '99+' : item.badge}
@@ -107,7 +169,7 @@ export function MobileNav() {
               }`}>
                 {item.label}
               </span>
-            </button>
+            </Link>
           );
         })}
       </div>

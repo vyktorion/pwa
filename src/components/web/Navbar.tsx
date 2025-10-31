@@ -20,16 +20,50 @@ export default function Navbar({ session: serverSession }: NavbarProps) {
   const currentSession = session || serverSession;
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Invalidate unread count when messages page trigger refresh
+  // Fetch unread count on mount and when session changes
   useEffect(() => {
-    const handleMessagesRefresh = () => {
-      // React Query will automatically refetch when this event fires
-      // No need for manual fetch anymore
-    };
+    if (currentSession?.user?.id) {
+      const fetchUnreadCount = async () => {
+        try {
+          const response = await fetch('/api/messages/unread');
+          if (response.ok) {
+            const data = await response.json();
+            setUnreadCount(data.unreadCount);
+          }
+        } catch (error) {
+          console.error('Error fetching unread count:', error);
+        }
+      };
 
-    window.addEventListener('navbar-refresh-unread', handleMessagesRefresh);
-    return () => window.removeEventListener('navbar-refresh-unread', handleMessagesRefresh);
-  }, []);
+      fetchUnreadCount();
+
+      // Fetch on tab focus/visibility change
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          fetchUnreadCount();
+        }
+      };
+
+      const handleFocus = () => {
+        fetchUnreadCount();
+      };
+
+      // Listen for messages page refresh trigger
+      const handleMessagesRefresh = () => {
+        fetchUnreadCount();
+      };
+
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      window.addEventListener('focus', handleFocus);
+      window.addEventListener('navbar-refresh-unread', handleMessagesRefresh);
+
+      return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('focus', handleFocus);
+        window.removeEventListener('navbar-refresh-unread', handleMessagesRefresh);
+      };
+    }
+  }, [currentSession?.user?.id]);
 
 
 
