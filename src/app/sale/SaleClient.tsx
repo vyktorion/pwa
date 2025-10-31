@@ -5,6 +5,7 @@ import { PropertyService } from "@/services/property.service";
 import { Property } from "@/types";
 import SaleClientDesktop from "./SaleClientDesktop";
 import SaleClientMobile from "./SaleClientMobile";
+import { useQuery } from '@tanstack/react-query';
 
 interface SaleClientProps {
   initialProperties: Property[];
@@ -13,8 +14,6 @@ interface SaleClientProps {
 export default function SaleClient({ initialProperties }: SaleClientProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
-  const [properties, setProperties] = useState<Property[]>(initialProperties || []);
-  const [, setLoading] = useState(false);
   const [currentPage] = useState(1);
   // Detect device type for default view mode
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
@@ -24,13 +23,10 @@ export default function SaleClient({ initialProperties }: SaleClientProps) {
     return 'list';
   });
 
-  // Funcție pentru căutare și sortare - optimizată cu cache pentru mobile
-  const handleSearch = useCallback(async (isInitialLoad = false) => {
-    if (!isInitialLoad) {
-      setLoading(true);
-    }
-
-    try {
+  // Use React Query for properties with global caching
+  const { data: propertiesData, isLoading } = useQuery({
+    queryKey: ['properties', searchQuery, sortBy, currentPage],
+    queryFn: async () => {
       const params: {
         q?: string;
         page?: number;
@@ -42,50 +38,21 @@ export default function SaleClient({ initialProperties }: SaleClientProps) {
         sortBy
       };
 
-      // Filtru text
       if (searchQuery.trim()) {
         params.q = searchQuery.trim();
       }
 
-      // Create cache key for mobile optimization
-      const cacheKey = `search_${JSON.stringify(params)}`;
-      const cached = sessionStorage.getItem(cacheKey);
+      return PropertyService.searchProperties(params);
+    },
+    initialData: initialProperties ? { properties: initialProperties, total: initialProperties.length, page: 1, totalPages: 1 } : undefined,
+    staleTime: 2 * 60 * 1000, // Consider data fresh for 2 minutes
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+  });
 
-      if (cached && !isInitialLoad) {
-        // Use cached data for instant response on mobile
-        const cachedData = JSON.parse(cached);
-        setProperties(cachedData.properties);
-        setLoading(false);
-        return;
-      }
+  const properties = propertiesData?.properties || [];
 
-      const result = await PropertyService.searchProperties(params);
-
-      // Cache results for 5 minutes on mobile
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem(cacheKey, JSON.stringify(result));
-        setTimeout(() => sessionStorage.removeItem(cacheKey), 5 * 60 * 1000);
-      }
-
-      // Folosește proprietățile direct din API - sortarea se face în DB
-      setProperties(result.properties);
-
-    } catch (error) {
-      console.error('❌ HomeClient: Error searching properties:', error);
-      alert('Eroare la încărcarea proprietăților. Încercați din nou.');
-    } finally {
-      setLoading(false);
-    }
-  }, [searchQuery, currentPage, sortBy]);
-
-  // Efect pentru căutare când filtrele se schimbă - instant search pentru text, debounce pentru alte filtre
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      handleSearch();
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [handleSearch]);
+  // React Query automatically handles refetching when query keys change
+  // No need for manual useEffect anymore
 
 
   return (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { MapPin } from "lucide-react";
@@ -10,30 +10,23 @@ import { Search, Plus } from "lucide-react";
 import { Property } from "@/types";
 import { PropertyService } from "@/services/property.service";
 import { truncateText } from "@/lib/utils";
+import { useQuery } from '@tanstack/react-query';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  // Fetch featured properties on component mount
-  useEffect(() => {
-    const fetchFeaturedProperties = async () => {
-      try {
-        const result = await PropertyService.searchProperties({
-          limit: 8,
-          sortBy: 'newest'
-        });
-        setProperties(result.properties);
-      } catch (error) {
-        console.error('Error fetching featured properties:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Use React Query for featured properties with global caching
+  const { data: featuredData, isLoading: loading } = useQuery({
+    queryKey: ['featured-properties'],
+    queryFn: () => PropertyService.searchProperties({
+      limit: 8,
+      sortBy: 'newest'
+    }),
+    staleTime: 10 * 60 * 1000, // Consider data fresh for 10 minutes
+    gcTime: 15 * 60 * 1000, // Keep in cache for 15 minutes
+  });
 
-    fetchFeaturedProperties();
-  }, []);
+  const properties = featuredData?.properties || [];
 
   const handleSearch = () => {
     if (searchQuery.trim()) {

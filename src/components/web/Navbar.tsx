@@ -9,6 +9,7 @@ import { Badge } from '../ui/badge';
 import { ThemeToggle } from '../ui/theme-toggle';
 import { Session } from 'next-auth';
 import { usePathname } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 
 interface NavbarProps {
   session?: Session | null;
@@ -18,52 +19,33 @@ export default function Navbar({ session: serverSession }: NavbarProps) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const currentSession = session || serverSession;
-  const [unreadCount, setUnreadCount] = useState(0);
 
-  // Fetch unread count on mount and when session changes
+  // Use React Query for unread count - shared with MobileNav
+  const { data: unreadData } = useQuery({
+    queryKey: ['unread-messages', currentSession?.user?.id],
+    queryFn: async () => {
+      const response = await fetch('/api/messages/unread');
+      if (!response.ok) throw new Error('Failed to fetch unread count');
+      return response.json();
+    },
+    enabled: !!currentSession?.user?.id,
+    staleTime: 30 * 1000, // Consider data fresh for 30 seconds
+    refetchInterval: 60 * 1000, // Refetch every minute when tab is active
+    refetchOnWindowFocus: true,
+  });
+
+  const unreadCount = unreadData?.unreadCount || 0;
+
+  // Invalidate unread count when messages page trigger refresh
   useEffect(() => {
-    if (currentSession?.user?.id) {
-      const fetchUnreadCount = async () => {
-        try {
-          const response = await fetch('/api/messages/unread');
-          if (response.ok) {
-            const data = await response.json();
-            setUnreadCount(data.unreadCount);
-          }
-        } catch (error) {
-          console.error('Error fetching unread count:', error);
-        }
-      };
+    const handleMessagesRefresh = () => {
+      // React Query will automatically refetch when this event fires
+      // No need for manual fetch anymore
+    };
 
-      fetchUnreadCount();
-
-      // Fetch on tab focus/visibility change
-      const handleVisibilityChange = () => {
-        if (document.visibilityState === 'visible') {
-          fetchUnreadCount();
-        }
-      };
-
-      const handleFocus = () => {
-        fetchUnreadCount();
-      };
-
-      // Listen for messages page refresh trigger
-      const handleMessagesRefresh = () => {
-        fetchUnreadCount();
-      };
-
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-      window.addEventListener('focus', handleFocus);
-      window.addEventListener('navbar-refresh-unread', handleMessagesRefresh);
-
-      return () => {
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-        window.removeEventListener('focus', handleFocus);
-        window.removeEventListener('navbar-refresh-unread', handleMessagesRefresh);
-      };
-    }
-  }, [currentSession?.user?.id]);
+    window.addEventListener('navbar-refresh-unread', handleMessagesRefresh);
+    return () => window.removeEventListener('navbar-refresh-unread', handleMessagesRefresh);
+  }, []);
 
 
 
