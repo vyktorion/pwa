@@ -142,7 +142,7 @@ export default function TestPage() {
               </button>
             ) : (
               <div className="bg-card rounded-xl p-6 shadow-sm border border-border max-w-md w-full text-center">
-                <h3 className="text-lg font-semibold mb-2"></h3>
+                <h3 className="text-lg font-semibold mb-2">Autentificare necesară</h3>
                 <p className="text-muted-foreground mb-4">
                   Trebuie să te autentifici pentru a putea posta un anunț.
                 </p>
