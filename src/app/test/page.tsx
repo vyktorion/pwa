@@ -15,7 +15,7 @@ export default function TestPage() {
     <div className="min-h-screen bg-[#f8f6f5] flex flex-col items-center py-4">
       <div className="w-[420px] bg-[#f8f6f5] flex flex-col items-center">
         <div className="w-full bg-white rounded-xl shadow-lg border border-[#f2eaea] p-4">
-          {/* Top section: property type, transaction type, title, upload */}
+          {/* Top section: property type, transaction type, title*/}
           <div className="bg-[#f8f6f5] rounded-xl p-4 mb-4">
             {/* Property type buttons */}
             <div className="grid grid-cols-4 gap-2 mb-3">
