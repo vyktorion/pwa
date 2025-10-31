@@ -3,14 +3,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Building, MessageSquare, User, Badge, Sun, Moon, SquarePlus } from 'lucide-react';
+import { Home, Building, MessageSquare, User, SquarePlus } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useTheme } from "next-themes";
 import { useSession } from 'next-auth/react';
 
 type NavItem = {
   href: string;
-  icon?: React.ComponentType<any>;
+  icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   label: string;
   active?: boolean;
   badge?: number | null;
@@ -20,7 +19,6 @@ type NavItem = {
 export function MobileNav() {
   const isMobile = useIsMobile();
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
   const [unreadCount, setUnreadCount] = useState(0);
 
