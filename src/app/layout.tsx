@@ -5,7 +5,6 @@ import { ThemeProvider } from "@/components/ui/theme-provider";
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/nextauth';
 import ClientLayout from './client-layout';
-import Pwa from "@/components/pwa";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,8 +56,6 @@ export default async function RootLayout({
           <ClientLayout session={session}>
             {children}
           </ClientLayout>
-
-          <Pwa />
         </ThemeProvider>
       </body>
     </html>

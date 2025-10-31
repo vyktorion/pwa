@@ -166,10 +166,12 @@ export default function SaleClientDesktop({
                     </div>
                     <div className="flex-1 p-4">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
-                        <h3 className="font-semibold text-foreground text-lg mb-1 sm:mb-0 hover:text-primary transition-colors cursor-pointer mt-1">
-                          {property.title}
+                        <h3 className="font-semibold text-foreground text-xl mb-1 sm:mb-0 hover:text-primary transition-colors cursor-pointer truncate">
+                          {truncateText(property.title, 55)}
                         </h3>
-                        <span className="text-xs bg-muted px-2 py-1 rounded-full w-fit">Comision 0%</span>
+                              <div className="text-xl font-bold text-primary">
+                                {property.price} {property.currency}
+                              </div>
                       </div>
                       <div className="flex items-center gap-1 text-muted-foreground mb-3">
                         <MapPin className="w-3 h-3" />
@@ -183,7 +185,7 @@ export default function SaleClientDesktop({
                         </span>
                         <span className="text-center">{property.yearBuilt || (property.features.length > 0 ? `${property.features.length} fac.` : '')}</span>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-4 line-clamp-3 lg:w-3/4">
+                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2 lg:w-3/4">
                         {property.description}
                       </p>
                       <div className="flex items-center justify-between">
@@ -206,7 +208,7 @@ export default function SaleClientDesktop({
 
       {/* Load More Button */}
       <div className="text-center mt-12">
-        <button className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors">
+        <button className="bg-primary text-primary-foreground px-6 py-3 rounded-xl font-medium hover:bg-primary/90 transition-colors">
           Încarcă mai multe anunțuri
         </button>
       </div>

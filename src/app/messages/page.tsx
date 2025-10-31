@@ -110,7 +110,6 @@ export default function MessagesPage() {
   // Mark conversation as read when messages are loaded (not just selected)
   useEffect(() => {
     if (selectedConversation && currentMessages.length > 0) {
-      console.log('👀 Messages visible, marking conversation as read:', selectedConversation._id);
       fetch('/api/conversations/' + selectedConversation._id + '/read', {
         method: 'POST',
       }).then(() => {
@@ -135,14 +134,11 @@ export default function MessagesPage() {
   // Open chat modal and always fetch fresh messages
   useEffect(() => {
     if (selectedConversation) {
-      console.log('💬 [Frontend] Opening chat for conversation:', selectedConversation._id);
-
       // Load initial messages
       loadMessages(selectedConversation._id);
       setShowChatModal(true);
     } else {
       // Reset pagination state when closing chat
-      console.log('🔒 [Frontend] Closing chat');
       setCurrentMessages([]);
       setHasMoreMessages(false);
       setNextBefore(null);
@@ -162,18 +158,13 @@ export default function MessagesPage() {
   }, [currentMessages]);
 
   const handleSendMessage = async () => {
-    console.log('📤 [Frontend] Starting to send message...');
     if (!newMessage.trim() || !selectedConversation) {
-      console.log('⚠️ [Frontend] Missing message content or conversation');
       return;
     }
 
-    console.log('📤 [Frontend] Message content:', newMessage.trim().substring(0, 50));
-    console.log('📤 [Frontend] Conversation ID:', selectedConversation._id);
     setSending(true);
 
     try {
-      console.log('📤 [Frontend] Making API request...');
       const response = await fetch('/api/messages', {
         method: 'POST',
         headers: {
@@ -185,12 +176,8 @@ export default function MessagesPage() {
         }),
       });
 
-      console.log('📤 [Frontend] Response status:', response.status);
-      console.log('📤 [Frontend] Response headers:', Object.fromEntries(response.headers.entries()));
-
       if (response.ok) {
         const message = await response.json();
-        console.log('✅ [Frontend] Message sent successfully:', message);
         setNewMessage('');
 
         toast({
@@ -198,7 +185,6 @@ export default function MessagesPage() {
           description: "Mesajul tău a fost trimis cu succes!",
         });
 
-        console.log('🔄 [Frontend] Updating local state...');
         // Update conversation with new message
         setConversations(prev =>
           prev.map(conv =>
@@ -216,10 +202,9 @@ export default function MessagesPage() {
 
         // Update currentMessages for instant display
         setCurrentMessages(prev => [...prev, message]);
-        console.log('✅ [Frontend] Local state updated');
       } else {
         const errorData = await response.json();
-        console.error('❌ [Frontend] Failed to send message:', errorData);
+        console.error('Failed to send message:', errorData);
         toast({
           variant: "destructive",
           title: "Eroare",
@@ -227,8 +212,7 @@ export default function MessagesPage() {
         });
       }
     } catch (error) {
-      console.error('🚨 [Frontend] Error sending message:', error);
-      console.error('🚨 [Frontend] Error details:', error instanceof Error ? error.message : String(error));
+      console.error('Error sending message:', error);
       toast({
         variant: "destructive",
         title: "Eroare",
@@ -236,7 +220,6 @@ export default function MessagesPage() {
       });
     } finally {
       setSending(false);
-      console.log('🏁 [Frontend] Send message operation completed');
     }
   };
 

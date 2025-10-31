@@ -4,9 +4,8 @@ import { SessionProvider } from 'next-auth/react';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import Navbar from '@/components/web/Navbar';
 import { Toaster } from '@/components/ui/sonner';
-import InstallPrompt from '@/components/InstallPrompt';
-import Pwa from '@/components/pwa';
-import { MobileNav } from '@/components/ui/mobile-nav';
+import { MobileNav } from '@/components/web/mobile-nav';
+import Footer from '@/components/web/Footer';
 import { Session } from 'next-auth';
 import { useEffect, useState } from 'react';
 
@@ -20,8 +19,6 @@ export default function ClientLayout({
   session,
 }: ClientLayoutProps) {
   const [isMobile, setIsMobile] = useState(false);
-
-  // Removed Service Worker registration - no longer needed for simple badge updates
 
   // Detect mobile device
   useEffect(() => {
@@ -42,12 +39,11 @@ export default function ClientLayout({
   return (
     <ThemeProvider>
       <SessionProvider session={session}>
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background flex flex-col">
           {showNavbar && <Navbar session={session} />}
-          <main className={`${showBottomNav ? 'pb-20' : ''}`}>{children}</main>
+          <main className={`${showBottomNav ? 'pb-20' : ''} flex-1`}>{children}</main>
+          <Footer />
           <Toaster />
-          <InstallPrompt />
-          <Pwa />
           {showBottomNav && <MobileNav />}
         </div>
       </SessionProvider>

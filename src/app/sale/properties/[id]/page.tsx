@@ -37,9 +37,7 @@ export default function PropertyDetailPage() {
   useEffect(() => {
     const loadProperty = async () => {
       try {
-        console.log('Loading property:', propertyId);
         const propertyData = await PropertyService.getPropertyById(propertyId);
-        console.log('API response:', propertyData);
 
         if (propertyData) {
           setProperty(propertyData);

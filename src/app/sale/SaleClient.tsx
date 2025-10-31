@@ -26,12 +26,6 @@ export default function SaleClient({ initialProperties }: SaleClientProps) {
 
   // Funcție pentru căutare și sortare - optimizată pentru instant search
   const handleSearch = useCallback(async (isInitialLoad = false) => {
-    console.log('🔍 SaleClient: Starting search with params:', {
-      isInitialLoad,
-      searchQuery,
-      currentPage
-    });
-
     if (!isInitialLoad) {
       setLoading(true);
     }
@@ -53,9 +47,7 @@ export default function SaleClient({ initialProperties }: SaleClientProps) {
         params.q = searchQuery.trim();
       }
 
-      console.log('📡 HomeClient: Calling PropertyService with params:', params);
       const result = await PropertyService.searchProperties(params);
-      console.log('✅ HomeClient: Received result:', result);
 
       // Folosește proprietățile direct din API - sortarea se face în DB
       setProperties(result.properties);
@@ -109,16 +101,6 @@ export default function SaleClient({ initialProperties }: SaleClientProps) {
           </div>
         </div>
       </section>
-
-      {/* Footer simplificat */}
-      <footer className="bg-muted/30 border-t border-border">
-        <div className="max-w-5xl mx-auto px-4 py-8">
-          <div className="text-center text-muted-foreground">
-            <p className="text-lg font-semibold text-foreground mb-2">Imob</p>
-            <p className="text-sm">Platforma imobiliară modernă • © 2025 Imob</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

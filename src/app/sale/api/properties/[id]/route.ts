@@ -9,10 +9,8 @@ export async function GET(
   const startTime = Date.now();
   try {
     const { id } = await params;
-    console.log('🔍 GET Property API: Starting for ID:', id);
     const client = new MongoClient(process.env.MONGODB_SALE!);
     const db = await client.db();
-    console.log('📊 GET Property API: Connected to database');
 
     // Try to find by _id first (MongoDB ObjectId)
     let property;
@@ -25,10 +23,7 @@ export async function GET(
       property = null;
     }
 
-    console.log('📊 GET Property API: Found property:', !!property);
-
     if (!property) {
-      console.log('❌ GET Property API: Property not found');
       return NextResponse.json(
         { error: 'Property not found' },
         { status: 404 }
@@ -70,7 +65,6 @@ export async function GET(
     };
 
     const endTime = Date.now();
-    console.log(`✅ GET Property API: Completed in ${endTime - startTime}ms`);
 
     return NextResponse.json(propertyWithUser);
   } catch (error) {
