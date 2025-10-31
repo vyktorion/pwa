@@ -74,7 +74,8 @@ export default function Navbar({ session: serverSession }: NavbarProps) {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center">
+            <Link href="/" className="flex items-center gap-2">
+              <img src="/favicon.png" alt="favicon" className="w-9 h-9" />
               <span className="text-lg font-bold text-foreground">Imob.ro</span>
             </Link>
           </div>

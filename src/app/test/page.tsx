@@ -1,184 +1,384 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
+import { ArrowLeft, Plus, MapPin, Home, Building, Wrench, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
-const TABS = [
-  { label: "Detalii", key: "details" },
-  { label: "Fotografii", key: "photos" },
-  { label: "Contact", key: "contact" },
+const TRANSACTIONS = [
+  { key: 'vanzare', label: 'De vânzare' },
+  { key: 'inchiriere', label: 'De închiriat' },
+  { key: 'hotelier', label: 'Regim hotelier' },
+];
+
+const PROPERTY_TYPES = [
+  { key: 'apartament', label: 'Apartament' },
+  { key: 'casa', label: 'Casă' },
+  { key: 'teren', label: 'Teren' },
+  { key: 'spatiu', label: 'Spațiu comercial' },
+];
+
+const availableFeatures = [
+  'Balcon', 'Terasă', 'Grădină', 'Garaj', 'Parcare', 'Centrală termică',
+  'Aer condiționat', 'Mobilat', 'Geamuri termopan', 'Sistem alarmă',
+  'Ascensor', 'Interfon', 'Conexiune internet', 'Cablu TV', 'Wi-Fi', 'Mic dejun', 'Piscină'
 ];
 
 export default function TestPage() {
-  const [activeTab, setActiveTab] = useState("details");
+  const [transactionType, setTransactionType] = useState<'vanzare'|'inchiriere'|'hotelier'>('vanzare');
+  const [propertyType, setPropertyType] = useState<'apartament'|'casa'|'teren'|'spatiu'>('apartament');
+  const [activeTab, setActiveTab] = useState<'details'|'photos'|'contact'>('details');
+
+  const [formData, setFormData] = useState<any>({
+    title: '', description: '', price: '', currency: '€',
+    propertyType: '', rooms: '', bathrooms: '', area: '', floor: '', totalFloors: '', yearBuilt: '',
+    location: { city: '', county: '', zone: '', address: '' },
+    rentPeriod: '', deposit: '', pricePerNight: '', hotelRooms: '', services: ''
+  });
+
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  const [contactInfo, setContactInfo] = useState({ name: '', phone: '', email: '', showPhone: true });
+
+  const handleInputChange = (field: string, value: string) => {
+    if (field.includes('.')) {
+      const [parent, child] = field.split('.');
+      setFormData((prev: any) => ({
+        ...prev,
+        [parent]: { ...prev[parent], [child]: value }
+      }));
+    } else {
+      setFormData((prev: any) => ({ ...prev, [field]: value }));
+    }
+  };
+
+  const handleFeatureToggle = (feature: string) => {
+    setSelectedFeatures(prev => prev.includes(feature) ? prev.filter(f => f !== feature) : [...prev, feature]);
+  };
 
   return (
-    <div className="min-h-screen bg-[#f8f6f5] flex flex-col items-center py-4">
-      <div className="w-[420px] bg-[#f8f6f5] flex flex-col items-center">
-        <div className="w-full bg-white rounded-xl shadow-lg border border-[#f2eaea] p-4">
-          {/* Top section: property type, transaction type, title, upload */}
-          <div className="bg-[#f8f6f5] rounded-xl p-4 mb-4">
-            {/* Property type buttons */}
-            <div className="grid grid-cols-4 gap-2 mb-3">
-              <button className="flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-xl bg-white text-[#3b82f6] font-semibold text-xs shadow-sm">
-                <span className="w-5 h-5 bg-[#22c55e] rounded-full flex items-center justify-center">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M4 7.5L6.5 10L10 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
-                Apartament
-              </button>
-              <button className="flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-xl border border-[#eaf0fa] bg-white text-[#bdbdbd] font-semibold text-xs shadow-sm">
-                <span className="inline-block w-5 h-5 bg-[#eaf0fa] rounded-full" />
-                Casă
-              </button>
-              <button className="flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-xl border border-[#eaf0fa] bg-white text-[#bdbdbd] font-semibold text-xs shadow-sm">
-                <span className="inline-block w-5 h-5 bg-[#eaf0fa] rounded-full" />
-                Teren
-              </button>
-              <button className="flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-xl border border-[#eaf0fa] bg-white text-[#bdbdbd] font-semibold text-xs shadow-sm">
-                <span className="inline-block w-5 h-5 bg-[#eaf0fa] rounded-full" />
-                Spațiu comercial
-              </button>
-            </div>
-            {/* Transaction type */}
-            <div className="flex gap-4 mb-3">
-              <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white text-[#3b82f6] font-semibold text-xs shadow-sm">
-                <span className="w-5 h-5 bg-[#22c55e] rounded-full flex items-center justify-center">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M4 7.5L6.5 10L10 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
-                De vânzare
-              </button>
-              <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white text-[#bdbdbd] font-semibold text-xs border border-[#eaf0fa]">
-                <span className="w-3 h-3 rounded-full bg-[#eaf0fa] inline-block" />
-                De închiriat
-              </button>
-            </div>
-            {/* Title input */}
-            <div className="mb-3">
-              <label className="block text-xs font-medium mb-1 text-[#bdbdbd]">Titlu anunț</label>
-              <div className="flex items-center border border-[#eaf0fa] rounded-lg bg-white px-3 py-2">
-                <input className="flex-1 text-xs bg-transparent outline-none" placeholder="Titlu anunț" maxLength={80} />
-                <span className="text-xs text-[#bdbdbd]">80 car.</span>
-              </div>
-            </div>
-            {/* Upload photo */}
-            <div className="mb-2">
-              <div className="bg-white border border-[#eaf0fa] rounded-lg p-3 flex flex-col items-start gap-2">
-                <span className="text-[#3b82f6] text-xs font-semibold cursor-pointer">+ Încarcă o fotografie</span>
-                <span className="text-xs text-[#bdbdbd]">sau drag and drop</span>
-                <span className="text-xs text-[#bdbdbd]">Maxim 16 poze. Formate acceptate: PNG, JPG. Dimensiune maxima 10MB</span>
-              </div>
-            </div>
-          </div>
-          {/* Tabs replicare screenshot */}
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex gap-2">
-              {TABS.map(tab => (
-                <button
-                  key={tab.key}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold border border-[#eaf0fa] transition-colors duration-150 ${
-                    activeTab === tab.key
-                      ? "bg-[#eaf0fa] text-[#3b82f6]"
-                      : "bg-white text-[#bdbdbd]"
-                  }`}
-                  onClick={() => setActiveTab(tab.key)}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-            <span className="text-xs text-[#bdbdbd]">●</span>
-          </div>
-          {/* ...restul formularului... */}
-          <form className="space-y-2">
-            <div className="mb-2">
-              <label className="block text-xs font-medium mb-1 text-[#d94f4f]">Tip proprietate</label>
-              <select className="w-full border border-[#eaf0fa] rounded-lg px-3 py-2 text-xs bg-[#f8f6f5]">
-                <option>Apartament</option>
-                <option>Casă</option>
-                <option>Teren</option>
-              </select>
-            </div>
-            <div className="mb-2">
-              <label className="block text-xs font-medium mb-1 text-[#d94f4f]">Titlu anunț</label>
-              <input className="w-full border border-[#eaf0fa] rounded-lg px-3 py-2 text-xs bg-[#f8f6f5]" placeholder="Titlu anunț" />
-            </div>
-            <div className="flex gap-2 items-center mb-2">
-              <div className="w-32 h-16 bg-[#eaf0fa] rounded-lg flex items-center justify-center overflow-hidden border border-[#eaf0fa]">
-                <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb" alt="preview" className="object-cover w-full h-full" />
-              </div>
-              <button className="px-3 py-2 rounded-lg bg-[#eaf0fa] text-[#3b82f6] text-xs font-semibold border border-[#eaf0fa]">Adaugă foto</button>
-            </div>
-            <div className="flex gap-2 justify-center mb-2">
-              <button className="w-8 h-8 rounded-full bg-white text-[#bdbdbd] font-bold border border-[#eaf0fa]">1</button>
-              <button className="w-8 h-8 rounded-full bg-white text-[#bdbdbd] font-bold border border-[#eaf0fa]">2</button>
-              <button className="w-8 h-8 rounded-full bg-[#eaf0fa] text-[#3b82f6] font-bold border border-[#eaf0fa]">3</button>
-            </div>
-            <div className="grid grid-cols-2 gap-2 mb-2">
-              <div>
-                <label className="block text-xs font-medium mb-1 text-[#d94f4f]">Camere</label>
-                <select className="w-full border border-[#eaf0fa] rounded-lg px-3 py-2 text-xs bg-[#f8f6f5]">
-                  <option>1</option>
-                  <option>2</option>
-                  <option>3</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1 text-[#d94f4f]">Compartimentare</label>
-                <select className="w-full border border-[#eaf0fa] rounded-lg px-3 py-2 text-xs bg-[#f8f6f5]">
-                  <option>Decomandat</option>
-                  <option>Semi-decomandat</option>
-                  <option>Nedecomandat</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1 text-[#d94f4f]">Etaj</label>
-                <input className="w-full border border-[#eaf0fa] rounded-lg px-3 py-2 text-xs bg-[#f8f6f5]" placeholder="Etaj" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1 text-[#d94f4f]">Preț</label>
-                <input className="w-full border border-[#eaf0fa] rounded-lg px-3 py-2 text-xs bg-[#f8f6f5]" placeholder="Preț" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1 text-[#d94f4f]">Suprafață utilă</label>
-                <input className="w-full border border-[#eaf0fa] rounded-lg px-3 py-2 text-xs bg-[#f8f6f5]" placeholder="mp" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1 text-[#d94f4f]">An construcție</label>
-                <input className="w-full border border-[#eaf0fa] rounded-lg px-3 py-2 text-xs bg-[#f8f6f5]" placeholder="An construcție" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1 text-[#d94f4f]">Stare imobil</label>
-                <select className="w-full border border-[#eaf0fa] rounded-lg px-3 py-2 text-xs bg-[#f8f6f5]">
-                  <option>Nou</option>
-                  <option>Renovat</option>
-                  <option>Necesită renovare</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1 text-[#d94f4f]">Locație</label>
-                <input className="w-full border border-[#eaf0fa] rounded-lg px-3 py-2 text-xs bg-[#f8f6f5]" placeholder="Locație" />
-              </div>
-            </div>
-            <div className="mb-2">
-              <label className="block text-xs font-medium mb-1 text-[#d94f4f]">Descriere</label>
-              <textarea className="w-full border border-[#eaf0fa] rounded-lg px-3 py-2 text-xs bg-[#f8f6f5]" rows={3} placeholder="Descriere" />
-            </div>
-            <div className="grid grid-cols-2 gap-2 mb-2">
-              <div>
-                <label className="block text-xs font-medium mb-1 text-[#d94f4f]">Email</label>
-                <input className="w-full border border-[#eaf0fa] rounded-lg px-3 py-2 text-xs bg-[#f8f6f5]" placeholder="Email" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1 text-[#d94f4f]">Telefon</label>
-                <input className="w-full border border-[#eaf0fa] rounded-lg px-3 py-2 text-xs bg-[#f8f6f5]" placeholder="Telefon" />
-              </div>
-            </div>
-            <button type="submit" className="w-full mt-2 py-3 rounded-lg bg-[#d94f4f] text-white font-bold text-base">CONTINUĂ</button>
-          </form>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="bg-card border-b border-border">
+        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center gap-4">
+          <Button variant="ghost">
+            <ArrowLeft className="w-4 h-4 mr-2" /> Înapoi
+          </Button>
+          <h1 className="text-2xl font-bold">Postează un anunț</h1>
         </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8 max-w-4xl space-y-8">
+        {/* Transaction type */}
+        <Card>
+          <CardContent className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Tip tranzacție</h3>
+              <div className="flex gap-4">
+                {TRANSACTIONS.map(t => (
+                  <button
+                    key={t.key}
+                    type="button"
+                    onClick={() => setTransactionType(t.key as any)}
+                    className={`px-4 py-2 rounded-full font-semibold text-xs border flex-1 text-center ${
+                      transactionType === t.key ? 'bg-primary text-white border-primary' : 'bg-card text-muted-foreground border-border'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Property type */}
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Tip proprietate</h3>
+              <div className="grid grid-cols-4 gap-2">
+                {PROPERTY_TYPES.map(p => (
+                  <button
+                    key={p.key}
+                    type="button"
+                    onClick={() => setPropertyType(p.key as any)}
+                    className={`flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-xl border text-xs font-semibold ${
+                      propertyType === p.key ? 'bg-primary/10 border-primary text-primary' : 'bg-card border-border text-muted-foreground'
+                    }`}
+                  >
+                    <span className={`w-5 h-5 rounded-full flex items-center justify-center ${propertyType === p.key ? 'bg-green-500' : 'bg-primary'}`}>
+                      {propertyType === p.key && (
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                          <path d="M4 7.5L6.5 10L10 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </span>
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tabs */}
+        <div className="flex gap-4 border-b border-border mb-4">
+          {['details','photos','contact'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab as any)}
+              className={`px-4 py-2 text-sm font-semibold border-b-2 ${
+                activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
+              }`}
+            >
+              {tab === 'details' ? 'Detalii' : tab === 'photos' ? 'Fotografii' : 'Contact'}
+            </button>
+          ))}
+        </div>
+
+        <form className="space-y-8">
+          {activeTab === 'details' && (
+            <>
+              {/* Basic Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Home className="w-5 h-5" /> Informații de bază
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-sm font-medium">Titlu *</label>
+                      <Input
+                        placeholder="ex: Apartament 3 camere, zona Unirii"
+                        value={formData.title}
+                        onChange={(e) => handleInputChange('title', e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Tip proprietate *</label>
+                      <Select
+                        value={formData.propertyType}
+                        onValueChange={(value) => handleInputChange('propertyType', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selectează tipul" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PROPERTY_TYPES.map(p => <SelectItem key={p.key} value={p.label}>{p.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Descriere *</label>
+                    <Textarea
+                      rows={6}
+                      placeholder="Descrie proprietatea..."
+                      value={formData.description}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  {/* Conditional fields */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {(transactionType !== 'hotelier') && (
+                      <>
+                        <div>
+                          <label className="text-sm font-medium">Preț *</label>
+                          <div className="flex">
+                            <Input
+                              type="number"
+                              placeholder="100000"
+                              value={formData.price}
+                              onChange={(e) => handleInputChange('price', e.target.value)}
+                              className="rounded-r-none"
+                              required
+                            />
+                            <Select value={formData.currency} onValueChange={(val) => handleInputChange('currency', val)}>
+                              <SelectTrigger className="rounded-l-none w-20"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="€">€</SelectItem>
+                                <SelectItem value="RON">RON</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Suprafață (mp) *</label>
+                          <Input
+                            type="number"
+                            placeholder="75"
+                            value={formData.area}
+                            onChange={(e) => handleInputChange('area', e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Camere</label>
+                          <Input
+                            type="number"
+                            placeholder="3"
+                            value={formData.rooms}
+                            onChange={(e) => handleInputChange('rooms', e.target.value)}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {transactionType === 'inchiriere' && (
+                      <>
+                        <div>
+                          <label className="text-sm font-medium">Chirie lunară</label>
+                          <Input
+                            type="number"
+                            placeholder="1500"
+                            value={formData.rentPeriod}
+                            onChange={(e) => handleInputChange('rentPeriod', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Depozit</label>
+                          <Input
+                            type="number"
+                            placeholder="1500"
+                            value={formData.deposit}
+                            onChange={(e) => handleInputChange('deposit', e.target.value)}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {transactionType === 'hotelier' && (
+                      <>
+                        <div>
+                          <label className="text-sm font-medium">Preț pe noapte</label>
+                          <Input
+                            type="number"
+                            placeholder="100"
+                            value={formData.pricePerNight}
+                            onChange={(e) => handleInputChange('pricePerNight', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Număr camere disponibile</label>
+                          <Input
+                            type="number"
+                            placeholder="10"
+                            value={formData.hotelRooms}
+                            onChange={(e) => handleInputChange('hotelRooms', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Servicii incluse</label>
+                          <Input
+                            placeholder="Wi-Fi, Mic dejun, Piscină"
+                            value={formData.services}
+                            onChange={(e) => handleInputChange('services', e.target.value)}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Location */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><MapPin className="w-5 h-5"/> Locație</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-sm font-medium">Oraș *</label>
+                    <Input value={formData.location.city} onChange={(e)=>handleInputChange('location.city', e.target.value)} required />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Județ *</label>
+                    <Input value={formData.location.county} onChange={(e)=>handleInputChange('location.county', e.target.value)} required />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-medium">Adresă completă</label>
+                    <Input value={formData.location.address} onChange={(e)=>handleInputChange('location.address', e.target.value)} />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Features */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Wrench className="w-5 h-5"/> Facilități</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {availableFeatures.map(f => (
+                      <button
+                        key={f}
+                        type="button"
+                        onClick={()=>handleFeatureToggle(f)}
+                        className={`p-3 border rounded-lg text-sm transition-all ${
+                          selectedFeatures.includes(f) ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                  {selectedFeatures.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {selectedFeatures.map(f=>(
+                        <Badge key={f} variant="secondary">
+                          {f}
+                          <button type="button" onClick={()=>handleFeatureToggle(f)} className="ml-2 hover:text-destructive">
+                            <X className="w-3 h-3"/>
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {activeTab === 'contact' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Contact</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-sm font-medium">Nume *</label>
+                    <Input value={contactInfo.name} onChange={e=>setContactInfo(prev=>({...prev, name: e.target.value}))} required/>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Telefon *</label>
+                    <Input value={contactInfo.phone} onChange={e=>setContactInfo(prev=>({...prev, phone: e.target.value}))} required/>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Email *</label>
+                  <Input type="email" value={contactInfo.email} onChange={e=>setContactInfo(prev=>({...prev, email: e.target.value}))} required/>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="showPhone" checked={contactInfo.showPhone} onChange={e=>setContactInfo(prev=>({...prev, showPhone: e.target.checked}))} className="rounded"/>
+                  <label htmlFor="showPhone" className="text-sm">Afișează numărul de telefon în anunț</label>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Submit */}
+          <div className="flex justify-end gap-4">
+            <Button type="button" variant="outline">Anulează</Button>
+            <Button type="submit" size="lg"><Plus className="w-4 h-4 mr-2"/> Postează anunțul</Button>
+          </div>
+        </form>
       </div>
     </div>
   );
