@@ -1,22 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { ArrowLeft, Upload, X, Plus, MapPin, Home, Building, Wrench } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, Upload, X, Plus, MapPin, Home, Building, Wrench, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { PropertyService } from '@/services/property.service';
-import { PropertyType } from '@/types';
-import { generateReactHelpers } from '@uploadthing/react';
-import type { OurFileRouter } from '@/lib/uploadthing';
-
-const { useUploadThing } = generateReactHelpers<OurFileRouter>();
+import { useRouter } from 'next/navigation';
 
 // Predefined features
 const availableFeatures = [
@@ -25,38 +17,15 @@ const availableFeatures = [
   'Ascensor', 'Interfon', 'Conexiune internet', 'Cablu TV'
 ];
 
-export default function PostPropertyPage() {
-  const { data: session, status } = useSession();
+export default function SaleFormPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
-
-  // UploadThing hook for property images
-  const { startUpload: startImageUpload, isUploading: isImageUploadingUT } = useUploadThing('propertyImageUploader', {
-    onClientUploadComplete: (res) => {
-      if (res) {
-        const uploadedUrls = res.map((file) => file.url);
-        // Replace the instant previews with actual uploaded URLs
-        setImages(prev => {
-          const instantPreviews = prev.slice(0, prev.length - uploadedUrls.length);
-          return [...instantPreviews, ...uploadedUrls].slice(0, 10);
-        });
-      }
-    },
-    onUploadError: (error) => {
-      console.error('Upload error:', error);
-      // Remove failed instant previews
-      setImages(prev => prev.filter(url => !url.startsWith('blob:')));
-      alert('Eroare la încărcarea imaginii: ' + error.message);
-    },
-  });
-
+  const [showPreview, setShowPreview] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     price: '',
     currency: '€' as const,
-    propertyType: '' as PropertyType,
+    propertyType: '',
     rooms: '',
     bathrooms: '',
     area: '',
@@ -78,25 +47,6 @@ export default function PostPropertyPage() {
     email: '',
     showPhone: true
   });
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (status === 'loading') return;
-    if (!session) {
-      router.push('/login');
-    }
-  }, [session, status, router]);
-
-  // Auto-populate contact info from session
-  useEffect(() => {
-    if (session?.user) {
-      setContactInfo(prev => ({
-        ...prev,
-        name: session.user.name || '',
-        email: session.user.email || '',
-      }));
-    }
-  }, [session]);
 
   const handleInputChange = (field: string, value: string) => {
     if (field.includes('.')) {
@@ -124,132 +74,37 @@ export default function PostPropertyPage() {
     );
   };
 
-
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files && files.length > 0) {
-      // Validate files
-      const validFiles: File[] = [];
-      for (const file of Array.from(files)) {
-        if (!file.type.startsWith('image/')) {
-          alert(`Fișierul ${file.name} nu este o imagine validă`);
-          continue;
-        }
-        if (file.size > 10 * 1024 * 1024) { // 10MB limit
-          alert(`Imaginea ${file.name} este prea mare (maxim 10MB)`);
-          continue;
-        }
-        validFiles.push(file);
-      }
-
-      if (validFiles.length > 0) {
-        // Check if adding these would exceed the 10 image limit
-        const totalImages = images.length + validFiles.length;
-        if (totalImages > 10) {
-          alert(`Poți încărca maxim 10 imagini. Ai selectat ${validFiles.length} imagini, dar ai deja ${images.length}.`);
-          return;
-        }
-
-        // Add instant previews for immediate visual feedback
-        const instantPreviews = validFiles.map(file => ({
-          file,
-          preview: URL.createObjectURL(file),
-          status: 'uploading' as const
-        }));
-
-        // Update state with instant previews
-        setImages(prev => [...prev, ...instantPreviews.map(item => item.preview)]);
-
-        // Start upload without resizing for speed
-        await startImageUpload(validFiles);
-      }
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const validateForm = () => {
-    if (!formData.title.trim()) return 'Titlul este obligatoriu';
-    if (!formData.description.trim()) return 'Descrierea este obligatorie';
-    if (!formData.price || isNaN(Number(formData.price))) return 'Prețul trebuie să fie un număr valid';
-    if (!formData.propertyType) return 'Tipul proprietății este obligatoriu';
-    if (!formData.location.city.trim()) return 'Orașul este obligatoriu';
-    if (!formData.location.county.trim()) return 'Județul este obligatoriu';
-    if (!formData.area || isNaN(Number(formData.area))) return 'Suprafața trebuie să fie un număr valid';
-    return null;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    const validationError = validateForm();
-    if (validationError) {
-      alert(validationError);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const propertyData = {
-        ...formData,
-        price: Number(formData.price),
-        rooms: formData.rooms ? Number(formData.rooms) : undefined,
-        bathrooms: formData.bathrooms ? Number(formData.bathrooms) : undefined,
-        area: Number(formData.area),
-        floor: formData.floor ? Number(formData.floor) : undefined,
-        totalFloors: formData.totalFloors ? Number(formData.totalFloors) : undefined,
-        yearBuilt: formData.yearBuilt ? Number(formData.yearBuilt) : undefined,
-        features: selectedFeatures,
-        images,
-        contactInfo,
-        userId: session?.user?.id || '',
-        isActive: true
-      };
-
-      await PropertyService.createProperty(propertyData);
-      alert('Anunțul a fost postat cu succes!');
-      router.push('/profile');
-    } catch (error) {
-      console.error('Error creating property:', error);
-      alert('Eroare la postarea anunțului. Încercați din nou.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return null; // Will redirect in useEffect
-  }
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-card border-b border-border">
         <div className="max-w-5xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => router.back()}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Înapoi
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" onClick={() => router.back()}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Înapoi
+              </Button>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="text-sm font-medium">De vânzare</span>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setShowPreview(!showPreview)}
+              className="flex items-center gap-2"
+            >
+              {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showPreview ? 'Ascunde' : 'Preview'}
             </Button>
-            <h1 className="text-2xl font-bold">Postează anunț</h1>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form className="space-y-8">
             {/* Basic Information */}
             <Card>
               <CardHeader>
@@ -501,7 +356,7 @@ export default function PostPropertyPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Upload className="w-5 h-5" />
-                  Imagini (maxim 10) {isImageUploadingUT && <span className="text-sm text-muted-foreground flex items-center gap-2">- <div className="animate-spin rounded-full h-3 w-3 border border-current border-t-transparent"></div> Se încarcă...</span>}
+                  Imagini (maxim 10)
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -512,58 +367,12 @@ export default function PostPropertyPage() {
                       <p className="text-sm text-muted-foreground">
                         Trage și plasează imaginile aici sau
                       </p>
-                      <label>
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          disabled={isImageUploadingUT}
-                          className="hidden"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={isImageUploadingUT}
-                          onClick={() => {
-                            const input = document.createElement('input');
-                            input.type = 'file';
-                            input.multiple = true;
-                            input.accept = 'image/*';
-                            input.onchange = (e) => void handleImageUpload(e as unknown as React.ChangeEvent<HTMLInputElement>);
-                            input.click();
-                          }}
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          {isImageUploadingUT ? 'Se încarcă...' : 'Alege imagini'}
-                        </Button>
-                      </label>
+                      <Button type="button" variant="outline" size="sm">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Alege imagini
+                      </Button>
                     </div>
                   </div>
-
-                  {images.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {images.map((image, index) => (
-                        <div key={index} className="relative group">
-                          <Image
-                            src={image}
-                            alt={`Imagine ${index + 1}`}
-                            width={400}
-                            height={96}
-                            className="w-full h-24 object-cover rounded-lg"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeImage(index)}
-                            className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
@@ -622,21 +431,12 @@ export default function PostPropertyPage() {
 
             {/* Submit */}
             <div className="flex justify-end gap-4">
-              <Button type="button" variant="outline" onClick={() => router.back()}>
+              <Button type="button" variant="outline">
                 Anulează
               </Button>
-              <Button type="submit" disabled={loading} size="lg">
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Se postează...
-                  </>
-                ) : (
-                  <>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Postează anunțul
-                  </>
-                )}
+              <Button type="submit" size="lg">
+                <Plus className="w-4 h-4 mr-2" />
+                Postează vânzarea
               </Button>
             </div>
           </form>
