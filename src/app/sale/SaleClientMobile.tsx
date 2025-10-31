@@ -190,9 +190,9 @@ export default function SaleClientMobile({
 
       {/* Properties Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {properties.map((property, propertyIndex) => (
+        {properties.map((property) => (
           <div key={property._id} className="bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow relative">
-            <ImageCarousel images={property.images} alt={property.title} propertyIndex={propertyIndex} />
+            <ImageCarousel images={property.images} alt={property.title} propertyIndex={0} />
             <div className="absolute top-3 right-3 bg-[hsl(var(--accent))] text-[hsl(var(--background))] px-2 py-1 rounded text-sm font-medium z-30">
               {formatPrice(property.price)} {property.currency}
             </div>

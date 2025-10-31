@@ -1,12 +1,10 @@
 // @ts-ignore
 import nextPwa from "next-pwa";
 import type { NextConfig } from "next";
+import withBundleAnalyzer from '@next/bundle-analyzer';
 
 const nextConfig: NextConfig = {
   /* config options here */
-  experimental: {
-    optimizePackageImports: ['@tanstack/react-query'],
-  },
   images: {
     remotePatterns: [
       {

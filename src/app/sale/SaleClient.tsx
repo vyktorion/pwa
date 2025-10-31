@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from "react";
-import { PropertyService } from "@/services/property.service";
 import { Property } from "@/types";
 import SaleClientDesktop from "./SaleClientDesktop";
 import SaleClientMobile from "./SaleClientMobile";
@@ -13,7 +12,6 @@ interface SaleClientProps {
 export default function SaleClient({ initialProperties }: SaleClientProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
-  const [currentPage] = useState(1);
   // Detect device type for default view mode
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
     if (typeof window !== 'undefined') {

@@ -82,7 +82,7 @@ export function MobileNav() {
           return (
             <button
               key={item.href}
-              className={`flex flex-col items-center justify-center px-2 py-2 transition-colors duration-75 min-w-0 flex-1 touch-manipulation active:bg-accent ${
+              className={`tap-btn flex flex-col items-center justify-center px-2 py-2 min-w-0 flex-1 ${
                 item.active
                   ? 'text-primary'
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
