@@ -7,45 +7,17 @@ import { Home, Building, MessageSquare, User, Badge, Sun, Moon } from 'lucide-re
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from "next-themes";
 import { useSession } from 'next-auth/react';
-import { useQuery } from '@tanstack/react-query';
+import { useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 
 export function MobileNav() {
   const isMobile = useIsMobile();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
-
-  // Use React Query for unread count with global caching
-  const { data: unreadData } = useQuery({
-    queryKey: ['unread-messages', session?.user?.id],
-    queryFn: async () => {
-      const response = await fetch('/api/messages/unread');
-      if (!response.ok) throw new Error('Failed to fetch unread count');
-      return response.json();
-    },
-    enabled: !!session?.user?.id,
-    staleTime: 30 * 1000, // Consider data fresh for 30 seconds
-    refetchInterval: 60 * 1000, // Refetch every minute when tab is active
-    refetchOnWindowFocus: true,
-  });
-
-  const unreadCount = unreadData?.unreadCount || 0;
-
-  // Invalidate unread count when messages page trigger refresh
-  useEffect(() => {
-    const handleMessagesRefresh = () => {
-      // React Query will automatically refetch when this event fires
-      // No need for manual fetch anymore
-    };
-
-    window.addEventListener('navbar-refresh-unread', handleMessagesRefresh);
-    return () => window.removeEventListener('navbar-refresh-unread', handleMessagesRefresh);
-  }, []);
-
-  // Only show on mobile devices
-  if (!isMobile) {
-    return null;
-  }
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const navItems = [
     {
@@ -53,12 +25,14 @@ export function MobileNav() {
       icon: Home,
       label: 'Acasă',
       active: pathname === '/',
+      prefetch: false, // Dezactivăm prefetch pentru răspuns instant
     },
     {
       href: '/sale',
       icon: Building,
       label: 'Listare',
       active: pathname === '/sale' || pathname.startsWith('/sale/'),
+      prefetch: false,
     },
     {
       href: '/theme',
@@ -73,18 +47,20 @@ export function MobileNav() {
       label: 'Mesaje',
       active: pathname === '/messages',
       badge: (session?.user && unreadCount > 0) ? unreadCount : null,
+      prefetch: false,
     },
     {
       href: '/profile',
       icon: User,
       label: 'Profil',
       active: pathname === '/profile',
+      prefetch: false,
     },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border shadow-lg">
-      <div className="flex items-center justify-around px-1 py-1">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border shadow-lg" style={{ touchAction: 'manipulation' }}>
+      <div className="flex items-center justify-around px-1 py-1" style={{ contain: 'layout style' }}>
         {navItems.map((item) => {
           if (item.action) {
             return (
@@ -104,14 +80,17 @@ export function MobileNav() {
           }
 
           return (
-            <Link
+            <button
               key={item.href}
-              href={item.href}
               className={`flex flex-col items-center justify-center px-2 py-2 transition-colors duration-75 min-w-0 flex-1 touch-manipulation active:bg-accent ${
                 item.active
                   ? 'text-primary'
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-              }`}
+                } ${isPending && item.active ? 'opacity-60' : ''}`}
+              onClick={() => {
+                // Feedback vizual instant (< 16ms) cu useTransition
+                startTransition(() => router.push(item.href));
+              }}
             >
               <div className="relative">
                 <item.icon
@@ -128,7 +107,7 @@ export function MobileNav() {
               }`}>
                 {item.label}
               </span>
-            </Link>
+            </button>
           );
         })}
       </div>

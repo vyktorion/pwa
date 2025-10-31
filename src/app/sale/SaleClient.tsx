@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { PropertyService } from "@/services/property.service";
 import { Property } from "@/types";
 import SaleClientDesktop from "./SaleClientDesktop";
 import SaleClientMobile from "./SaleClientMobile";
-import { useQuery } from '@tanstack/react-query';
 
 interface SaleClientProps {
   initialProperties: Property[];
@@ -23,33 +22,7 @@ export default function SaleClient({ initialProperties }: SaleClientProps) {
     return 'list';
   });
 
-  // Use React Query for properties with global caching
-  const { data: propertiesData, isLoading } = useQuery({
-    queryKey: ['properties', searchQuery, sortBy, currentPage],
-    queryFn: async () => {
-      const params: {
-        q?: string;
-        page?: number;
-        limit?: number;
-        sortBy?: string;
-      } = {
-        page: currentPage,
-        limit: 20,
-        sortBy
-      };
-
-      if (searchQuery.trim()) {
-        params.q = searchQuery.trim();
-      }
-
-      return PropertyService.searchProperties(params);
-    },
-    initialData: initialProperties ? { properties: initialProperties, total: initialProperties.length, page: 1, totalPages: 1 } : undefined,
-    staleTime: 2 * 60 * 1000, // Consider data fresh for 2 minutes
-    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
-  });
-
-  const properties = propertiesData?.properties || [];
+  const properties = initialProperties || [];
 
   // React Query automatically handles refetching when query keys change
   // No need for manual useEffect anymore

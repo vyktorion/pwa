@@ -9,7 +9,6 @@ import { Badge } from '../ui/badge';
 import { ThemeToggle } from '../ui/theme-toggle';
 import { Session } from 'next-auth';
 import { usePathname } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
 
 interface NavbarProps {
   session?: Session | null;
@@ -19,22 +18,7 @@ export default function Navbar({ session: serverSession }: NavbarProps) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const currentSession = session || serverSession;
-
-  // Use React Query for unread count - shared with MobileNav
-  const { data: unreadData } = useQuery({
-    queryKey: ['unread-messages', currentSession?.user?.id],
-    queryFn: async () => {
-      const response = await fetch('/api/messages/unread');
-      if (!response.ok) throw new Error('Failed to fetch unread count');
-      return response.json();
-    },
-    enabled: !!currentSession?.user?.id,
-    staleTime: 30 * 1000, // Consider data fresh for 30 seconds
-    refetchInterval: 60 * 1000, // Refetch every minute when tab is active
-    refetchOnWindowFocus: true,
-  });
-
-  const unreadCount = unreadData?.unreadCount || 0;
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Invalidate unread count when messages page trigger refresh
   useEffect(() => {
