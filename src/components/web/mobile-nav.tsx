@@ -32,7 +32,7 @@ export function MobileNav() {
 
       fetchUnreadCount();
 
-      // Fetch on tab focus/visibility change
+      // Fetch on tab focus/visibility change only
       const handleVisibilityChange = () => {
         if (document.visibilityState === 'visible') {
           fetchUnreadCount();
@@ -48,27 +48,14 @@ export function MobileNav() {
         fetchUnreadCount();
       };
 
-      // Additional mobile-specific events
-      const handleTouchStart = () => {
-        fetchUnreadCount();
-      };
-
-      const handleOrientationChange = () => {
-        fetchUnreadCount();
-      };
-
       document.addEventListener('visibilitychange', handleVisibilityChange);
       window.addEventListener('focus', handleFocus);
       window.addEventListener('navbar-refresh-unread', handleMessagesRefresh);
-      window.addEventListener('touchstart', handleTouchStart);
-      window.addEventListener('orientationchange', handleOrientationChange);
 
       return () => {
         document.removeEventListener('visibilitychange', handleVisibilityChange);
         window.removeEventListener('focus', handleFocus);
         window.removeEventListener('navbar-refresh-unread', handleMessagesRefresh);
-        window.removeEventListener('touchstart', handleTouchStart);
-        window.removeEventListener('orientationchange', handleOrientationChange);
       };
     }
   }, [session?.user?.id]);
@@ -122,7 +109,7 @@ export function MobileNav() {
               <button
                 key={item.href}
                 onClick={item.action}
-                className="flex flex-col items-center justify-center px-2 py-2 transition-colors duration-150 min-w-0 flex-1 text-muted-foreground hover:text-foreground hover:bg-accent/50 touch-manipulation"
+                className="flex flex-col items-center justify-center px-2 py-2 transition-colors duration-75 min-w-0 flex-1 text-muted-foreground hover:text-foreground hover:bg-accent/50 touch-manipulation active:bg-accent"
               >
                 <div className="relative">
                   <item.icon className="w-5 h-5" />
@@ -138,7 +125,7 @@ export function MobileNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center px-2 py-2 transition-colors duration-150 min-w-0 flex-1 touch-manipulation ${
+              className={`flex flex-col items-center justify-center px-2 py-2 transition-colors duration-75 min-w-0 flex-1 touch-manipulation active:bg-accent ${
                 item.active
                   ? 'text-primary'
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'

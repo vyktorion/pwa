@@ -100,8 +100,8 @@ function ImageCarousel({ images, alt, propertyIndex }: { images: string[], alt: 
               width={400}
               height={225}
               className="w-full h-full object-cover"
-              priority={propertyIndex < 3 && index === 0}
-              loading={propertyIndex < 3 ? "eager" : index === 0 ? "eager" : "lazy"}
+              priority={false}
+              loading="lazy"
             />
           </div>
         ))}

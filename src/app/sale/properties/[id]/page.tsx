@@ -57,23 +57,36 @@ export default function PropertyDetailPage() {
     }
   }, [propertyId, router]);
 
-  // Preload all images after property loads (but after main image is displayed)
+  // Preload images progressively (max 3 at a time) after property loads
   useEffect(() => {
     if (property && property.images.length > 0) {
       const firstImageSrc = property.images[0];
-      // Wait for first image to load, then preload all others
+      // Wait for first image to load, then preload others in batches
       preloadImage(firstImageSrc).then(() => {
         setPreloadedImages(prev => new Set([...prev, 0]));
 
-        // Preload all remaining images in background
+        // Preload remaining images in batches of 3 with delay
         const remainingImages = property.images.slice(1);
-        remainingImages.forEach((imageSrc, index) => {
-          preloadImage(imageSrc).then(() => {
-            setPreloadedImages(prev => new Set([...prev, index + 1]));
-          }).catch(() => {
-            // Silently fail for preload errors
-          });
-        });
+        const preloadBatch = async (images: string[], startIndex: number) => {
+          const batch = images.slice(0, 3); // Process max 3 at a time
+          await Promise.all(batch.map((imageSrc, index) =>
+            preloadImage(imageSrc).then(() => {
+              setPreloadedImages(prev => new Set([...prev, startIndex + index + 1]));
+            }).catch(() => {
+              // Silently fail for preload errors
+            })
+          ));
+
+          // Process next batch after a small delay
+          const nextBatch = images.slice(3);
+          if (nextBatch.length > 0) {
+            setTimeout(() => preloadBatch(nextBatch, startIndex + 3), 100);
+          }
+        };
+
+        if (remainingImages.length > 0) {
+          setTimeout(() => preloadBatch(remainingImages, 0), 200);
+        }
       }).catch(() => {
         // Silently fail if first image preload fails
       });
@@ -251,9 +264,8 @@ export default function PropertyDetailPage() {
                         <button
                           key={index}
                           onClick={() => handleImageNavigation(index)}
-                          className={`w-2 h-2 rounded-full transition-colors ${
-                            selectedImage === index ? 'bg-white' : 'bg-white/50'
-                          }`}
+                          className={`w-2 h-2 rounded-full transition-colors ${selectedImage === index ? 'bg-white' : 'bg-white/50'
+                            }`}
                         />
                       ))}
                     </div>
@@ -274,9 +286,8 @@ export default function PropertyDetailPage() {
                         <button
                           key={`${thumbnailOffset}-${i}`}
                           onClick={() => handleImageNavigation(imageIndex)}
-                          className={`aspect-video overflow-hidden rounded-lg border-2 transition-all duration-200 relative ${
-                            selectedImage === imageIndex ? 'border-primary ring-2 ring-primary/20' : 'border-transparent hover:border-primary/50'
-                          }`}
+                          className={`aspect-video overflow-hidden rounded-lg border-2 transition-all duration-200 relative ${selectedImage === imageIndex ? 'border-primary ring-2 ring-primary/20' : 'border-transparent hover:border-primary/50'
+                            }`}
                         >
                           <Image
                             src={image || "/placeholder-image.jpg"}
@@ -394,29 +405,46 @@ export default function PropertyDetailPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Contact Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Contactează vânzătorul</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3 overflow-hidden">
-                      {property.contactInfo.avatar ? (
-                        <Image
-                          src={property.contactInfo.avatar}
-                          alt="Avatar proprietar"
-                          width={64}
-                          height={64}
-                          className="w-16 h-16 rounded-full object-cover"
-                        />
-                      ) : (
-                        <User className="w-8 h-8 text-primary" />
-                      )}
-                    </div>
-                  <h3 className="font-semibold">{property.contactInfo.name}</h3>
-                  <p className="text-sm text-muted-foreground">{property.contactInfo.role || 'Proprietar'}</p>
+            <Card className="p-4 border border-border shadow-sm rounded-xl max-w-sm mx-auto">
+              <div className="flex items-center justify-center gap-4">
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center">
+                  {property.contactInfo.avatar ? (
+                    <Image
+                      src={property.contactInfo.avatar}
+                      alt="Avatar proprietar"
+                      width={64}
+                      height={64}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-8 h-8 text-primary" />
+                  )}
                 </div>
 
+                <div className="flex flex-col text-center">
+                  <h3 className="font-semibold leading-none text-lg">
+                    {property.contactInfo.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {property.contactInfo.role || "Proprietar"} imobiliar
+                  </p>
+                  <Link
+                    href="/"
+                    className="text-sm text-ring relative inline-block transition-all duration-200 hover:text-primary/80 focus:text-primary/80 hover:scale-105"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <span className="relative z-10">Vezi toate anunțurile</span>
+                    <span
+                      className="absolute left-0 bottom-0 w-full h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"
+                      aria-hidden="true"
+                    />
+                  </Link>
+                </div>
+              </div>
+            </Card> 
+
+            <Card>
+              <CardContent className="space-y-4">
                 <div className="space-y-3">
                   {property.contactInfo.showPhone && (
                     <div className="relative">
@@ -457,12 +485,11 @@ export default function PropertyDetailPage() {
 
                 <div className="pt-4 border-t">
                   <p className="text-xs text-muted-foreground text-center">
-                    Contactează direct proprietarul pentru mai multe informații
+                    Contactează pentru mai multe informații
                   </p>
                 </div>
               </CardContent>
             </Card>
-
             {/* Quick Info */}
             <Card>
               <CardContent className="p-4">

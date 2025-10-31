@@ -24,7 +24,7 @@ export default function SaleClient({ initialProperties }: SaleClientProps) {
     return 'list';
   });
 
-  // Funcție pentru căutare și sortare - optimizată pentru instant search
+  // Funcție pentru căutare și sortare - optimizată cu cache pentru mobile
   const handleSearch = useCallback(async (isInitialLoad = false) => {
     if (!isInitialLoad) {
       setLoading(true);
@@ -47,7 +47,25 @@ export default function SaleClient({ initialProperties }: SaleClientProps) {
         params.q = searchQuery.trim();
       }
 
+      // Create cache key for mobile optimization
+      const cacheKey = `search_${JSON.stringify(params)}`;
+      const cached = sessionStorage.getItem(cacheKey);
+
+      if (cached && !isInitialLoad) {
+        // Use cached data for instant response on mobile
+        const cachedData = JSON.parse(cached);
+        setProperties(cachedData.properties);
+        setLoading(false);
+        return;
+      }
+
       const result = await PropertyService.searchProperties(params);
+
+      // Cache results for 5 minutes on mobile
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(cacheKey, JSON.stringify(result));
+        setTimeout(() => sessionStorage.removeItem(cacheKey), 5 * 60 * 1000);
+      }
 
       // Folosește proprietățile direct din API - sortarea se face în DB
       setProperties(result.properties);
