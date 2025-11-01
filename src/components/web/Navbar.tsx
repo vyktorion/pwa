@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { Plus, MessageSquare, User, LogIn } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -75,7 +76,13 @@ export default function Navbar({ session: serverSession }: NavbarProps) {
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2">
-              <img src="/favicon.png" alt="favicon" className="w-9 h-9" />
+              <Image
+                src="/favicon.png"
+                alt="favicon"
+                width={36}
+                height={36}
+                className="w-9 h-9"
+              />
               <span className="text-lg font-bold text-foreground">Imob.ro</span>
             </Link>
           </div>
@@ -85,19 +92,17 @@ export default function Navbar({ session: serverSession }: NavbarProps) {
             {/* Theme Toggle */}
             <ThemeToggle />
 
+            {/* Add Property Button - Always visible */}
+            <Link href="/test">
+              <Button className="h-9 p-2 rounded-xl gap-0">
+                <Plus className="w-5 h-5" />
+                Adauga anunt
+              </Button>
+            </Link>
+
             {/* Auth Buttons */}
-             {currentSession ? (
+            {currentSession ? (
               <div className="flex items-center space-x-3">
-                <Link
-                  href="/sale/post" >
-                  <Button
-                    // variant="secondary" (mutat pe Button)
-                    className="h-9 p-2 rounded-xl gap-0"
-                  >
-                    <Plus className="w-5 h-5" />
-                    Adauga anunt
-                  </Button>
-                </Link>
                 <Link
                   href="/messages"
                   className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/80 transition-all duration-200 group"
@@ -121,18 +126,11 @@ export default function Navbar({ session: serverSession }: NavbarProps) {
             ) : (
               <div className="flex items-center space-x-3">
                 <Link
-                  href="/register"
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/80 transition-all duration-200 group"
-                >
-                  <Plus className="h-4 w-4 group-hover:text-primary transition-colors" />
-                  <span className="font-semibold">Signup</span>
-                </Link>
-                <Link
                   href="/login"
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/80 transition-all duration-200 group"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-primary hover:bg-accent/80 transition-all duration-200 group"
                 >
                   <LogIn className="h-4 w-4 group-hover:text-primary transition-colors" />
-                  <span className="font-semibold">Login</span>
+                  <span className="font-semibold group-hover:text-primary transition-colors">Login</span>
                 </Link>
               </div>
             )}

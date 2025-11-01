@@ -6,7 +6,6 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const startTime = Date.now();
   try {
     const { id } = await params;
     const client = new MongoClient(process.env.MONGODB_SALE!);
@@ -63,8 +62,6 @@ export async function GET(
         role: 'Proprietar',
       }
     };
-
-    const endTime = Date.now();
 
     return NextResponse.json(propertyWithUser);
   } catch (error) {

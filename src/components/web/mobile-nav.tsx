@@ -73,7 +73,7 @@ export function MobileNav() {
         activePath === '/sale' ||
         (activePath.startsWith('/sale/') && !activePath.startsWith('/sale/post')),
     },
-    { href: '/sale/post', icon: SquarePlus, label: 'Adauga', active: activePath === '/sale/post' },
+    { href: '/test', icon: SquarePlus, label: 'Adauga', active: activePath === '/test' },
     {
       href: '/messages',
       icon: MessageSquare,
