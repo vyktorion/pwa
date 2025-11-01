@@ -50,23 +50,14 @@ export function MobileNav() {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') fetchUnreadCount();
     };
-    const handleFocus = () => fetchUnreadCount();
-    const handleMessagesRefresh = () => fetchUnreadCount();
     const handleTouchStart = () => fetchUnreadCount();
-    const handleOrientationChange = () => fetchUnreadCount();
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('navbar-refresh-unread', handleMessagesRefresh);
     window.addEventListener('touchstart', handleTouchStart);
-    window.addEventListener('orientationchange', handleOrientationChange);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('navbar-refresh-unread', handleMessagesRefresh);
       window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('orientationchange', handleOrientationChange);
     };
   }, [session?.user?.id]);
 
