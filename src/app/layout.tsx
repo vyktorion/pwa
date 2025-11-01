@@ -32,7 +32,7 @@ export const viewport = {
   minimumScale: 1,
   maximumScale: 5,
   userScalable: true,
-  themeColor: '#ffffff',
+  themeColor: '#00bfff',
 };
 
 export default async function RootLayout({
