@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   description: "pwa resources",
   manifest: "/manifest.json",
   icons: {
-    icon: "/favicon.png",
-    apple: "/favicon.png",
+    icon: "/logo.png",
+    apple: "/logo.png",
   },
 };
 
